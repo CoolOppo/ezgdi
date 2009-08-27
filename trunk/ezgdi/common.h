@@ -28,8 +28,6 @@
 #include <malloc.h>
 #include <crtdbg.h>
 
-#include <detours.h>
-
 #include "optimize/optimize.h"
 
 #define ASSERT			_ASSERTE

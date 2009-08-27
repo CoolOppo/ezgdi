@@ -14,6 +14,7 @@
 #include "ft.h"
 #include "fteng.h"
 #include <locale.h>
+#include <detours.h>
 
 
 // DATA_foo、ORIG_foo の２つをまとめて定義するマクロ
