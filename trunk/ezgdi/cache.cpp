@@ -131,6 +131,7 @@ void CBitmapCache::DrawHorizontalLine(int X1, int Y1, int X2, COLORREF rgb, int 
 	}*/
 
 	//–³ˆÓ–¡‚ÉƒAƒZƒ“ƒuƒŠ‰»
+#ifdef _M_IX86
 	__asm {
 		mov ebx, dword ptr [Yd]
 		mov edx, dword ptr [lpPixels]
@@ -145,4 +146,5 @@ L1:
 		dec ebx
 		jnz L1
 	}
+#endif
 }
