@@ -146,5 +146,11 @@ L1:
 		dec ebx
 		jnz L1
 	}
+#else
+	for (int yy=Y1; yy<Y2; yy++) {
+		for (int xx=X1; xx<X2; xx++) {
+			*( (DWORD*)m_lpPixels + (yy * xSize + xx) ) = rgb;
+		}
+	}
 #endif
 }
