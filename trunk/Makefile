@@ -3,8 +3,6 @@ RELEASE = 1
 BASEVER = gdi0850
 VERSION = $(PREFIX)-r$(RELEASE)-$(BASEVER)
 
-.PHONY: all clean
-
 all:
 	@$(MAKE) X86=1 do-all
 	@$(MAKE) X64=1 do-all
@@ -22,37 +20,34 @@ ARCH=x64
 ARCH=x86
 !endif
 
-SRCDIR = ezgdi
-OBJS = hook.obj override.obj settings.obj cache.obj misc.obj expfunc.obj ft.obj fteng.obj ft2vert.obj gdidll.res
-!ifdef X86
-OBJS = $(OBJS) optimize\memcpy__amd.obj
-!endif
-
 TABASE = $(PREFIX)-$(ARCH)
 TARGET = $(TABASE).dll
 OBJDIR = build\objs-$(ARCH)
-!ifdef X64
-OBJS = build\objs-x64\$(OBJS: = build\objs-x64\) #-)
-!else
-OBJS = build\objs-x86\$(OBJS: = build\objs-x86\) #-)
-!endif	
+SRCDIR = ezgdi
 
-.PHONY: do-all do-init do-build do-clean do-cleanobj
+OBJS = hook.obj override.obj settings.obj cache.obj misc.obj expfunc.obj ft.obj fteng.obj ft2vert.obj gdidll.res
+!ifdef X86
+OBJS = $(OBJS) memcpy__amd.obj
+OBJS = build\objs-x86\$(OBJS: = build\objs-x86\) #-)
+!else
+OBJS = build\objs-x64\$(OBJS: = build\objs-x64\) #-)
+!endif	
 
 do-all:
 	@$(MAKE) do-init
 	@$(MAKE) do-build
 
 do-init: $(OBJDIR)
-	@xcopy /m /s /q /y "$(SRCDIR)" "$(OBJDIR)"
+	@xcopy /t /q /y "$(SRCDIR)" "$(OBJDIR)"
 
 $(OBJDIR):
 	@mkdir $(OBJDIR)
-	@xcopy /s /q /y "$(SRCDIR)" "$(OBJDIR)"
 
 do-build: $(TARGET)
+	echo build $*
 
 do-clean: do-cleanobj
+	echo clean
 	@-erase /f /q "$(TABASE).*" >NUL 2>NUL
 
 do-cleanobj:
@@ -78,7 +73,11 @@ LIBS = $(LIBS) freetype32.lib easyhook32.lib
 !    endif
 !endif
 
-CFLAGS = /EHsc /GF /GL /Gy /MT /O2 /W3 
+!if defined(X86) && defined(USE_DETOURS)
+DEFS = $(DEFS) /DUSE_DETOURS
+!endif
+
+CFLAGS = /EHsc /GF /GL /Gy /MT /O2 /W3 $(DEFS)
 !ifdef X86
 CFLAGS = /arch:SSE2 $(CFLAGS)
 !endif
@@ -90,14 +89,17 @@ $(TARGET): $(OBJS) $(SRCDIR)\expfunc.def
 
 .SUFFIXES: .cpp .obj .rc .res
 
-.cpp.obj:
+{$(SRCDIR)}.cpp{$(OBJDIR)}.obj:
 	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
 
-.c.obj:
+{$(SRCDIR)\optimize}.cpp{$(OBJDIR)}.obj:
 	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
 
-.rc.res:
-	rc /l 0x411 $<
+{$(SRCDIR)}.c{$(OBJDIR)}.obj:
+	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
+
+{$(SRCDIR)}.rc{$(OBJDIR)}.res:
+	rc /fo $@ /l 0x411 $<
 
 !endif # defined(ARCH)
 
