@@ -14,8 +14,9 @@
 #include "ft.h"
 #include "fteng.h"
 #include <locale.h>
-#include <detours.h>
 
+#ifdef USE_DETOURS
+#include <detours.h>
 
 // DATA_foo、ORIG_foo の２つをまとめて定義するマクロ
 #define HOOK_DEFINE(rettype, name, argtype) \
@@ -71,7 +72,53 @@ static void hook_term()
 	}
 }
 #undef HOOK_DEFINE
+#else
+#include <easyhook.h>
 
+static void hook_initinternal()
+{
+}
+
+#define HOOK_DEFINE(rettype, name, argtype) \
+	static TRACED_HOOK_HANDLE HOOK_##name;
+#include "hooklist.h"
+#undef HOOK_DEFINE
+
+static ULONG ACLEntries[1] = {0};
+
+#define FORCE(expr) {if(!SUCCEEDED(NtStatus = (expr))) goto ERROR_ABORT;}
+
+#define HOOK_DEFINE(rettype, name, argtype) \
+    HOOK_##name = new HOOK_TRACE_INFO(); \
+    FORCE(LhInstallHook((PVOID)name, IMPL_##name, (PVOID)0, HOOK_##name));\
+    FORCE(LhSetInclusiveACL(ACLEntries, 1, HOOK_##name));
+
+static void hook_init()
+{
+	NTSTATUS NtStatus;
+	FORCE(LhSetGlobalExclusiveACL(ACLEntries, 1));
+#include "hooklist.h"
+	FORCE(LhSetGlobalInclusiveACL(ACLEntries, 1));
+	return;
+
+ERROR_ABORT:
+	TRACE(_T("hook_init error: %#x\n"), NtStatus);
+}
+#undef HOOK_DEFINE
+//
+
+#define HOOK_DEFINE(rettype, name, argtype) \
+    delete HOOK_##name; \
+    HOOK_##name = NULL;
+
+static void hook_term()
+{
+	LhUninstallAllHooks();
+#include "hooklist.h"
+	LhWaitForPendingRemovals();
+}
+#undef HOOK_DEFINE
+#endif
 
 //---
 
