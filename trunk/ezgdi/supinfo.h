@@ -45,6 +45,8 @@ EXTERN_C LPWSTR WINAPI GdippEnvironment(DWORD& dwCreationFlags, LPVOID lpEnviron
 template <typename _TCHAR, typename _STARTUPINFO, class _Function>
 BOOL _CreateProcessAorW(const _TCHAR* lpApp, _TCHAR* lpCmd, LPSECURITY_ATTRIBUTES pa, LPSECURITY_ATTRIBUTES ta, BOOL bInherit, DWORD dwFlags, LPVOID lpEnv, const _TCHAR* lpDir, _STARTUPINFO* psi, LPPROCESS_INFORMATION ppi, _Function fn)
 {
+	return fn(lpApp, lpCmd, pa, ta, bInherit, dwFlags, lpEnv, lpDir, psi, ppi);
+#if 0
 #ifdef _GDIPP_RUN_CPP
 	const bool hookCP = true;
 	const bool runGdi = true;
@@ -57,7 +59,6 @@ BOOL _CreateProcessAorW(const _TCHAR* lpApp, _TCHAR* lpCmd, LPSECURITY_ATTRIBUTE
 	if (!hookCP || (!lpApp && !lpCmd) || (dwFlags & (DEBUG_PROCESS | DEBUG_ONLY_THIS_PROCESS)) || !psi || psi->cb < sizeof(_STARTUPINFO)) {
 		return fn(lpApp, lpCmd, pa, ta, bInherit, dwFlags, lpEnv, lpDir, psi, ppi);
 	}
-
 	PROCESS_INFORMATION _pi = { 0 };
 	if (!ppi) {
 		ppi = &_pi;
@@ -89,4 +90,5 @@ BOOL _CreateProcessAorW(const _TCHAR* lpApp, _TCHAR* lpCmd, LPSECURITY_ATTRIBUTE
 	}
 	free(pEnvW);
 	return TRUE;
+#endif
 }
