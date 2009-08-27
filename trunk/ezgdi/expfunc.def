@@ -1,0 +1,10 @@
+LIBRARY gdi++.dll
+EXPORTS
+	GetMsgProc @1
+	DllGetVersion = GdippDllGetVersion @2
+;;	GdippInjectDLL
+;	GdippInstallHook
+;	GdippRemoveHook
+;	GdippUnloadALL
+;	GdippApplyNewSettings
+;	GdippApplyNewSettingsToALL
