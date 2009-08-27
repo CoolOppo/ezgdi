@@ -1,4 +1,4 @@
-LIBRARY gdi++.dll
+; LIBRARY gdi++.dll
 EXPORTS
 	GetMsgProc @1
 	DllGetVersion = GdippDllGetVersion @2
