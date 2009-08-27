@@ -61,6 +61,7 @@ EXTERN_C HRESULT WINAPI GdippDllGetVersion(DLLVERSIONINFO* pdvi)
 
 #endif	//!_GDIPP_EXE
 
+#if 0
 
 #ifndef Assert
 #include <crtdbg.h>
@@ -376,3 +377,4 @@ EXTERN_C LPWSTR WINAPI GdippEnvironment(DWORD& dwCreationFlags, LPVOID lpEnviron
 	dwCreationFlags |= CREATE_UNICODE_ENVIRONMENT;
 	return pEnvW;
 }
+#endif
