@@ -20,7 +20,7 @@ FREETYPE_INCDIR = ..\freetype\include
 FREETYPE_LIBDIR = ..\freetype
 
 # use detours in 32-bit version
-USE_DETOURS = 1
+#USE_DETOURS = 1
 
 # specify directories for detours
 #  detours.h
