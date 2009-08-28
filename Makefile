@@ -72,12 +72,12 @@ LIBS = $(LIBS) freetype32.lib detoured.lib detours.lib
 LIBS = $(LIBS) freetype32.lib easyhook32.lib
 !    endif
 !endif
-
+DEFS = /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
 !if defined(X86) && defined(USE_DETOURS)
 DEFS = $(DEFS) /DUSE_DETOURS
 !endif
 
-CFLAGS = /EHsc /GF /GL /Gy /MT /O2 /W3 $(DEFS)
+CFLAGS = /FD /GF /GL /GS- /Gy /MT /Ox /Oi /Ot /W3 $(DEFS) # /O2 /EHsc 
 !ifdef X86
 CFLAGS = /arch:SSE2 $(CFLAGS)
 !endif
