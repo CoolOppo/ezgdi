@@ -45,7 +45,7 @@ DEFS = /DNDEBUG /DWIN32 /D_LIB /D_CRT_SECURE_NO_WARNINGS /DFT2_BUILD_LIBRARY
 CFLAGS = $(CFLAGS) $(DEFS)
 
 $(TARGET): $(OBJS)
-#	$(LD) /lib /out:$@ $(OBJS)
+	$(LD) /lib /out:$@ $(OBJS)
 
 {$(SRCDIR)\autofit}.c{$(OBJDIR)\autofit}.obj:
 	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
