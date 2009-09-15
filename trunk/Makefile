@@ -4,21 +4,17 @@ BASEVER = gdi0850
 VERSION = $(PREFIX)-r$(RELEASE)-$(BASEVER)
 
 all:
-	@$(MAKE) X86=1 do-all
-	@$(MAKE) X64=1 do-all
+	@$(MAKE) /nologo X86=1 do-all
+	@$(MAKE) /nologo X64=1 do-all
 
 clean:
-	@$(MAKE) X86=1 do-clean
-	@$(MAKE) X64=1 do-clean
+	@$(MAKE) /nologo X86=1 do-clean
+	@$(MAKE) /nologo X64=1 do-clean
 	@-rmdir /s /q build >NUL 2>NUL
 
 !if defined(X86) || defined(X64)
 
-!ifdef X64
-ARCH=x64
-!else
-ARCH=x86
-!endif
+!include config.mak
 
 TABASE = $(PREFIX)-$(ARCH)
 TARGET = $(TABASE).dll
@@ -27,34 +23,36 @@ SRCDIR = ezgdi
 
 OBJS = hook.obj override.obj settings.obj cache.obj misc.obj expfunc.obj ft.obj fteng.obj ft2vert.obj gdidll.res
 !ifdef X86
-OBJS = $(OBJS) memcpy__amd.obj
+OBJS = $(OBJS) optimize\memcpy__amd.obj
 OBJS = build\objs-x86\$(OBJS: = build\objs-x86\) #-)
 !else
 OBJS = build\objs-x64\$(OBJS: = build\objs-x64\) #-)
 !endif	
 
 do-all:
-	@$(MAKE) do-init
-	@$(MAKE) do-build
+	@$(MAKE) /nologo do-init
+	@$(MAKE) /nologo do-build
 
 do-init: $(OBJDIR)
 	@xcopy /t /q /y "$(SRCDIR)" "$(OBJDIR)"
+
+$(FREETYPE_DIR)\freetype-x86.lib: freetype.mak
+	$(MAKE) -f freetype.mak X86=1
+
+$(FREETYPE_DIR)\freetype-x64.lib: freetype.mak
+	$(MAKE) -f freetype.mak X64=1
 
 $(OBJDIR):
 	@mkdir $(OBJDIR)
 
 do-build: $(TARGET)
-	echo build $*
 
 do-clean: do-cleanobj
-	echo clean
 	@-erase /f /q "$(TABASE).*" >NUL 2>NUL
 
 do-cleanobj:
 	@-erase /s /f /q "$(OBJDIR)" >NUL 2>NUL
 	@-rmdir /s /q "$(OBJDIR)" >NUL 2>NUL
-
-!include config.mak
 
 INCDIR = $(SRCDIR) $(FREETYPE_INCDIR) $(EASYHOOK_INCDIR) $(DETOURS_INCDIR)
 LIBDIR = $(FREETYPE_LIBDIR) $(EASYHOOK_LIBDIR)  $(DETOURS_LIBDIR)
@@ -62,40 +60,34 @@ INCLUDE = $(INCLUDE);$(INCDIR: =;)
 LIB = $(LIB);$(LIBDIR: =;)
 LIBPATH = $(LIB)
 
-LIBS = advapi32.lib usp10.lib
+LIBS = advapi32.lib usp10.lib freetype-$(ARCH).lib
 !ifdef X64
-LIBS = $(LIBS) freetype64.lib easyhook64.lib
+LIBS = $(LIBS) easyhook64.lib
 !else # X86
 !    ifdef USE_DETOURS
-LIBS = $(LIBS) freetype32.lib detoured.lib detours.lib
+LIBS = $(LIBS) detoured.lib detours.lib
 !    else
-LIBS = $(LIBS) freetype32.lib easyhook32.lib
+LIBS = $(LIBS) easyhook32.lib
 !    endif
 !endif
 DEFS = /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
 !if defined(X86) && defined(USE_DETOURS)
 DEFS = $(DEFS) /DUSE_DETOURS
 !endif
+CFLAGS = $(CFLAGS) $(DEFS)
 
-CFLAGS = /FD /GF /GL /GS- /Gy /MT /Ox /Oi /Ot /W3 $(DEFS) # /O2 /EHsc 
-!ifdef X86
-CFLAGS = /arch:SSE2 $(CFLAGS)
-!endif
-
-LDFLAGS = /nologo /opt:icf /opt:ref /ltcg $(LIBS)
-
-$(TARGET): $(OBJS) $(SRCDIR)\expfunc.def
+$(TARGET): $(OBJS) $(SRCDIR)\expfunc.def $(FREETYPE_DIR)\freetype-$(ARCH).lib
 	$(LD) /dll $(LDFLAGS) /def:$(SRCDIR)\expfunc.def /out:$@ $(OBJS)
 
 .SUFFIXES: .cpp .obj .rc .res
 
+{$(SRCDIR)}.c{$(OBJDIR)}.obj:
+	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
+
 {$(SRCDIR)}.cpp{$(OBJDIR)}.obj:
 	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
 
-{$(SRCDIR)\optimize}.cpp{$(OBJDIR)}.obj:
-	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
-
-{$(SRCDIR)}.c{$(OBJDIR)}.obj:
+{$(SRCDIR)\optimize}.cpp{$(OBJDIR)\optimize}.obj:
 	$(CC) /nologo $(CFLAGS) /Fo$@ /c $<
 
 {$(SRCDIR)}.rc{$(OBJDIR)}.res:
