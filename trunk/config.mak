@@ -33,7 +33,7 @@ DETOURS_INCDIR = ..\detours\include
 DETOURS_LIBDIR = ..\detours\lib
 
 # use intel compiler to compile
-USE_ICC = 1
+#USE_ICC = 1
 
 # common config
 # you may not want to modify following lines
