@@ -62,11 +62,14 @@ LIBPATH = $(LIB)
 
 !ifdef USE_ICC
 LDFLAGS = /opt:icf /opt:ref $(LIBS)
-CFLAGS = /GS- /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W3
-CFLAGS_SAFE = /GS- /MT /O1 /GF /Gs /Og /Os /Oi- /Oy /Gy /Ob2 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W3
+CFLAGS = /GS- /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /EHsc
+CFLAGS_SAFE = /GS- /MT /O1 /GF /Gs /Og /Os /Oi- /Gy /Ob2 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /EHsc
+!  ifdef X86
+CFLAGS_SAFE = $(CFLAGS_SAFE) /Oy
+!  endif
 !else
 LDFLAGS = /opt:icf /opt:ref /ltcg $(LIBS)
-CFLAGS = /GF /GL /GS- /Gy /MT /O2 /Oi /Ot /W3
+CFLAGS = /GF /GL /GS- /Gy /MT /O2 /Oi /Ot /W4 /EHsc
 !  ifdef X86
 CFLAGS = /arch:SSE2 $(CFLAGS)
 !  endif
