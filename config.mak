@@ -33,7 +33,7 @@ DETOURS_INCDIR = ..\detours\include
 DETOURS_LIBDIR = ..\detours\lib
 
 # use intel compiler to compile
-#USE_ICC = 1
+USE_ICC = 1
 
 # common config
 # you may not want to modify following lines
@@ -62,7 +62,8 @@ LIBPATH = $(LIB)
 
 !ifdef USE_ICC
 LDFLAGS = /opt:icf /opt:ref $(LIBS)
-CFLAGS = /GF /GS- /Gy /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W3
+CFLAGS = /GS- /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W3
+CFLAGS_SAFE = /GS- /MT /O1 /GF /Gs /Og /Os /Oi- /Oy /Gy /Ob2 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W3
 !else
 LDFLAGS = /opt:icf /opt:ref /ltcg $(LIBS)
 CFLAGS = /GF /GL /GS- /Gy /MT /O2 /Oi /Ot /W3

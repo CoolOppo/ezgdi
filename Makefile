@@ -74,7 +74,7 @@ DEFS = /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
 !if defined(X86) && defined(USE_DETOURS)
 DEFS = $(DEFS) /DUSE_DETOURS
 !endif
-CFLAGS = $(CFLAGS) $(DEFS)
+CFLAGS = $(CFLAGS_SAFE) $(DEFS)
 
 $(TARGET): $(OBJS) $(SRCDIR)\expfunc.def $(FREETYPE_DIR)\freetype-$(ARCH).lib
 	$(LD) /dll $(LDFLAGS) /def:$(SRCDIR)\expfunc.def /out:$@ $(OBJS)
