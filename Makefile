@@ -70,14 +70,20 @@ LIBS = $(LIBS) detoured.lib detours.lib
 LIBS = $(LIBS) easyhook32.lib
 !    endif
 !endif
-DEFS = /DNDEBUG /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
+DEFS = /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
 !if defined(X86) && defined(USE_DETOURS)
 DEFS = $(DEFS) /DUSE_DETOURS
 !endif
+
+!ifdef DEBUG
+CFLAGS = $(CFLAGS_DEBUG) $(DEFS)
+LDFLAGS = $(LDFLAGS_DEBUG) /pdb:$(TABASE).pdb
+!else
 CFLAGS = $(CFLAGS_SAFE) $(DEFS)
+!endif
 
 $(TARGET): $(OBJS) $(SRCDIR)\expfunc.def $(FREETYPE_DIR)\freetype-$(ARCH).lib
-	$(LD) /dll $(LDFLAGS) /def:$(SRCDIR)\expfunc.def /out:$@ $(OBJS)
+	$(LD) /dll $(LDFLAGS) $(LIBS) /def:$(SRCDIR)\expfunc.def /out:$@ $(OBJS)
 
 .SUFFIXES: .cpp .obj .rc .res
 
