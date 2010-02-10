@@ -9,6 +9,7 @@
 
 #define NOMINMAX
 #include <Windows.h>
+#include <shlwapi.h>
 #include <usp10.h>
 //#include <limits>
 #include <functional>
@@ -332,6 +333,8 @@ static void _Trace2_Str(LPWSTR func, int line, LPCWSTR lpString, UINT cbString)
 #endif	//USE_TRACE
 
 #ifdef _DEBUG
+
+#if 0 /* disable GetClockCount */
 FORCEINLINE static __int64 GetClockCount()
 {
 	LARGE_INTEGER cycles;
@@ -365,6 +368,8 @@ public:
 		TRACE(_T("%hs: %u clocks\n"), m_pszName, (DWORD)(GetClockCount() - m_ilClk));
 	}
 };
+#endif
+
 #else
 class CDebugElapsedCounter
 {

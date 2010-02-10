@@ -116,7 +116,14 @@ bool CGdippSettings::LoadSettings(HINSTANCE hModule)
 		return false;
 	}
 
-	*PathFindExtension(m_szFileName) = L'\0';
+	LPTSTR p;
+	if (p = StrStrI(m_szFileName, _T("-x86.dll")))
+		*p = L'\0';
+	else if (p = StrStrI(m_szFileName, _T("-x64.dll")))
+		*p = L'\0';
+	else
+		*PathFindExtension(m_szFileName) = L'\0';
+
 	StringCchCat(m_szFileName, MAX_PATH, _T(".ini"));
 	return LoadAppSettings(m_szFileName);
 }
