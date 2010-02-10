@@ -1,21 +1,21 @@
 # build debug version of ezgdi
-#DEBUG = 1
+DEBUG = 1
 
 # dynamic linking to freetype.dll
 #USE_FTDLL = 0
 
 # specify directories for
 # use visual c++ x64 cross tools
-#USE_VCX64CROSS = 0
+USE_VCX64CROSS = 1
 
 # specify directories for EasyHook
 #  easyhook.h
-EASYHOOK_INCDIR = ..\easyhook\public 
+EASYHOOK_INCDIR = ..\easyhook-2.6
 #  x86\easyhook32.lib x64\easyhook64.lib
-EASYHOOK_LIBDIR = ..\easyhook\release\x86 ..\easyhook\release\x64
+EASYHOOK_LIBDIR = $(EASYHOOK_INCDIR)
 
 # specify directories for FreeType
-FREETYPE_DIR = ..\freetype
+FREETYPE_DIR = ..\freetype-2.3.11
 #  freetype includes
 FREETYPE_INCDIR = $(FREETYPE_DIR)\include
 #  freetype32.lib freetype64.lib, see README
@@ -33,7 +33,7 @@ DETOURS_INCDIR = ..\detours\include
 DETOURS_LIBDIR = ..\detours\lib
 
 # use intel compiler to compile
-USE_ICC = 1
+#USE_ICC = 1
 
 # common config
 # you may not want to modify following lines
