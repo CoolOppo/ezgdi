@@ -72,33 +72,56 @@ static void hook_term()
 	}
 }
 #undef HOOK_DEFINE
-#else
+
+#else /* EASYHOOK */
+
 #include <easyhook.h>
 
-static void hook_initinternal()
-{
-}
-
-#define HOOK_DEFINE(rettype, name, argtype) \
-	static TRACED_HOOK_HANDLE HOOK_##name;
-#include "hooklist.h"
+#define HOOK_DEFINE(rettype, name, argtype, args, modname) \
+	HOOK_TRACE_INFO HOOK_##name; \
+	rettype (WINAPI * FUNC_##name) argtype = NULL; \
+	rettype (WINAPI * ORIG_##name) argtype = NULL; \
+	rettype WINAPI OLD_##name argtype { \
+      ULONG ACLEntries[] = {0}; \
+      LhSetExclusiveACL(ACLEntries, 1, &HOOK_##name); \
+      rettype retval = ##name args; \
+      LhSetExclusiveACL(ACLEntries, 0, &HOOK_##name); \
+      return retval; \
+   }
+#include "hooklist2.h"
 #undef HOOK_DEFINE
 
-static ULONG ACLEntries[1] = {0};
+static FARPROC GetProcAddressInDll(LPCTSTR lpczDllName, LPCSTR lpczProcName)
+{
+   HMODULE hDLL = LoadLibrary(lpczDllName);
+   if (hDLL == NULL)
+      return NULL;
+   FARPROC lpProc = GetProcAddress(hDLL, lpczProcName);
+   FreeLibrary(hDLL);
+   return lpProc;
+}
+
+#define HOOK_DEFINE(rettype, name, argtype, args, modname) \
+	FUNC_##name = (rettype (WINAPI *) argtype) GetProcAddressInDll(_T(modname), #name); \
+   ORIG_##name = OLD_##name;
+static void hook_initinternal()
+{
+#include "hooklist2.h"
+}
+#undef HOOK_DEFINE
 
 #define FORCE(expr) {if(!SUCCEEDED(NtStatus = (expr))) goto ERROR_ABORT;}
 
 #define HOOK_DEFINE(rettype, name, argtype) \
-    HOOK_##name = new HOOK_TRACE_INFO(); \
-    FORCE(LhInstallHook((PVOID)name, IMPL_##name, (PVOID)0, HOOK_##name));\
-    FORCE(LhSetInclusiveACL(ACLEntries, 1, HOOK_##name));
+    FORCE(LhInstallHook(FUNC_##name, IMPL_##name, (PVOID)0, &HOOK_##name));\
+    FORCE(LhSetExclusiveACL(ACLEntries, 0, &HOOK_##name));
 
 static void hook_init()
 {
+   ULONG ACLEntries[1] = {0};
 	NTSTATUS NtStatus;
-	FORCE(LhSetGlobalExclusiveACL(ACLEntries, 1));
 #include "hooklist.h"
-	FORCE(LhSetGlobalInclusiveACL(ACLEntries, 1));
+	FORCE(LhSetGlobalExclusiveACL(ACLEntries, 0));
 	return;
 
 ERROR_ABORT:
@@ -107,17 +130,12 @@ ERROR_ABORT:
 #undef HOOK_DEFINE
 //
 
-#define HOOK_DEFINE(rettype, name, argtype) \
-    delete HOOK_##name; \
-    HOOK_##name = NULL;
-
 static void hook_term()
 {
 	LhUninstallAllHooks();
-#include "hooklist.h"
 	LhWaitForPendingRemovals();
 }
-#undef HOOK_DEFINE
+
 #endif
 
 //---
