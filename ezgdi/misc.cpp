@@ -6,6 +6,7 @@ CRITICAL_SECTION CCriticalSectionLock::m_cs;
 #define CharPrev(s, c)	((c) - 1)
 #endif
 
+#ifndef PathIsRelative
 //éËî≤Ç´ÇÃÉpÉXëÄçÏä÷êîåQ
 BOOL WINAPI PathIsRelative(LPCTSTR pszPath)
 {
@@ -140,6 +141,7 @@ LPTSTR WINAPI PathCombine(LPTSTR pszDest, LPCTSTR pszDir, LPCTSTR pszFile)
 TRACE(_T("PathCombine: %s\n"), pszDest);
 	return pszDest;
 }
+#endif /* PathIsRelative */
 
 LPWSTR _StrDupExAtoW(LPCSTR pszMB, int cchMB /*= -1*/, LPWSTR pszStack /*= NULL*/, int cchStack /*= 0*/, int* pcchWC /*= NULL*/)
 {
