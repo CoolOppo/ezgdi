@@ -556,12 +556,10 @@ BOOL WINAPI IMPL_ExtTextOutW(HDC hdc, int nXStart, int nYStart, UINT fuOptions, 
 	// サロゲートや合成を含む場合はオリジナルの関数にぶん投げる
 	// Uniscribe経由でETO_GLYPH_INDEXフラグ付きで戻ってくる
 	// ビットマップフォントやフォールバック時などETO_GLYPH_INDEXが付かないこともあるので再入をチェック
-#ifdef USE_DETOURS
 	if (!(fuOptions & ETO_GLYPH_INDEX) && !pTLInfo->InUniscribe()
 		 && ScriptIsComplex(lpString, cbString, SIC_COMPLEX) == S_OK) {
 		return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
 	}
-#endif
 
 	if (pTLInfo->InExtTextOut()) {
 		return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
