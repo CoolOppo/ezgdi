@@ -20,7 +20,6 @@ extern "C" int main(int argc, wchar_t* argv[])
     UNICODE_STRING*         NameBuffer = NULL;
     HANDLE                                  hRemoteThread;
 
-    printf(".\n");
     ORIG_MessageBeepHook = MessageBeep;
     /*
         The following shows how to install and remove local hooks...
@@ -34,22 +33,47 @@ extern "C" int main(int argc, wchar_t* argv[])
     printf(".\n");
     // won't invoke the hook handler because hooks are inactive after installation
     MessageBeep(123);
+    getch();
 
-    printf(".\n");
+    BOOL flags = 1;
+    FORCE(LhIsThreadIntercepted(hHook, 0, &flags));
+    printf("Intercepted %d\n", flags);
     // activate the hook for the current thread
     FORCE(LhSetInclusiveACL(ACLEntries, 1, hHook));
+    FORCE(LhIsThreadIntercepted(hHook, 0, &flags));
+    printf("Intercepted %d\n", flags);
 
     printf(".\n");
     // will be redirected into the handler...
     MessageBeep(123);
+    getch();
+
+    FORCE(LhSetGlobalExclusiveACL(ACLEntries, 1));
+    printf(".\n");
+    // will be redirected into the handler...
+    MessageBeep(123);
+    getch();
+
+    FORCE(LhSetGlobalInclusiveACL(ACLEntries, 1));
+    printf(".\n");
+    // will be redirected into the handler...
+    MessageBeep(123);
+    getch();
 
     printf(".\n");
+    // won't invoke the hook handler because hooks are inactive after installation
+    ORIG_MessageBeepHook(123);
+    getch();
+
     // this will also invalidate "hHook", because it is a traced handle...
     LhUninstallAllHooks();
-
-    printf(".\n");
     // this will do nothing because the hook is already removed...
     LhUninstallHook(hHook);
+
+    printf(".\n");
+    // will be redirected into the handler...
+    MessageBeep(123);
+    getch();
 
     // now we can safely release the traced handle
     delete hHook;
