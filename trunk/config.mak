@@ -8,6 +8,9 @@
 # use visual c++ x64 cross tools
 USE_VCX64CROSS = 1
 
+# link to easyhook debug lib for debug version
+# USE_DEBUG_LIB = 1
+
 # specify directories for EasyHook
 #  easyhook.h
 EASYHOOK_INCDIR = ..\easyhook-2.6
@@ -61,7 +64,7 @@ LIB = $(ICPP_COMPILER11)\tbb\ia32\vc9\lib;$(ICPP_COMPILER11)\lib\ia32;$(LIB)
 LIBPATH = $(LIB)
 
 CFLAGS_DEBUG = /Od /MTd /FD /RTC1 /Zi /DDEBUG /D_DEBUG
-LDFLAGS_DEBUG = /incremental:no /debug /opt:ref /opt:noicf /map
+LDFLAGS_DEBUG = /incremental:no /debug /opt:ref /opt:noicf /map /nodefaultlib:libcmt
 
 !ifdef USE_ICC
 LDFLAGS = /opt:icf /opt:ref
