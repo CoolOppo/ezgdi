@@ -1,5 +1,5 @@
 # build debug version of ezgdi
-DEBUG = 1
+#DEBUG = 1
 
 # dynamic linking to freetype.dll
 #USE_FTDLL = 0
