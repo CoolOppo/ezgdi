@@ -1,7 +1,7 @@
 BIN=easyhook-localhook.exe rdtsc.exe apitracer.dll beep.exe msgbeep.dll
 
 CPPFLAGS=/DUNICODE /D_UNICODE /DDEBUG /D_DEBUG /DEBUG /MTd /EHsc /W3 /I..\..\easyhook-2.6 /I..\..\detours\include
-LINKFLAGS=/LIBPATH:..\..\easyhook-2.6 /LIBPATH:..\..\detours\lib detours.lib detoured.lib easyhook32.lib user32.lib advapi32.lib usp10.lib /DEBUG
+LINKFLAGS=/LIBPATH:..\..\easyhook-2.6 /LIBPATH:..\..\detours\lib detours.lib detoured.lib easyhook32.lib user32.lib advapi32.lib usp10.lib gdi32.lib /DEBUG
 
 all: $(BIN)
 
