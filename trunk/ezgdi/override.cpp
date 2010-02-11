@@ -794,7 +794,7 @@ ETO_TRY();
 	//setup
 	SetTextAlign(hCanvasDC, TA_LEFT | TA_TOP);
 	//debug
-	Dbg_TraceExtTextOutW(nXStart, nYStart, fuOptions, lpString, cbString, lpDx);
+	//Dbg_TraceExtTextOutW(nXStart, nYStart, fuOptions, lpString, cbString, lpDx);
 
 	//textout
 	SetTextColor(hCanvasDC, GetTextColor(hdc));
