@@ -60,14 +60,18 @@ INCLUDE = $(INCLUDE);$(INCDIR: =;)
 LIB = $(LIB);$(LIBDIR: =;)
 LIBPATH = $(LIB)
 
+!ifdef USE_DEBUG_LIB
+EH_LIB_SUFFIX = d
+!endif
+
 LIBS = advapi32.lib usp10.lib freetype-$(ARCH).lib
 !ifdef X64
-LIBS = $(LIBS) easyhook64.lib
+LIBS = $(LIBS) easyhook64$(EH_LIB_SUFFIX).lib
 !else # X86
 !    ifdef USE_DETOURS
 LIBS = $(LIBS) detoured.lib detours.lib
 !    else
-LIBS = $(LIBS) easyhook32.lib
+LIBS = $(LIBS) easyhook32$(EH_LIB_SUFFIX).lib
 !    endif
 !endif
 DEFS = /DWIN32 /D_WINDOWS /D_UNICODE /DUNICODE
