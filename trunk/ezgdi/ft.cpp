@@ -1,9 +1,8 @@
 #include "stdafx.h"
+
 #include "override.h"
 #include "ft.h"
-
 #include "fteng.h"
-
 #include "ft2vert.h"
 
 #define IsFontBold(lf)     ((lf).lfWeight > FW_NORMAL)
@@ -93,18 +92,7 @@ struct FreeTypeDrawInfo
    bool IsMono() const { return !!(params.ftOptions & FTO_MONO); }
    bool IsSizeOnly() const { return !!(params.ftOptions & FTO_SIZE_ONLY); }
    CGGOKerning ggokerning;
-
-#ifdef _DEBUG
-   void Validate();
-#endif
 };
-
-#ifdef _DEBUG
-void FreeTypeDrawInfo::Validate()
-{
-   Assert(params.lplf);
-}
-#endif
 
 //fteng.cppで定義
 extern FT_Library     freetype_library;
@@ -1006,11 +994,6 @@ public:
 
 BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
 {
-//CDebugElapsedCounter cntr("FreeTypePrepare");
-#ifdef _DEBUG
-   FTInfo.Validate();
-#endif
-
    FT_Face& freetype_face        = FTInfo.freetype_face;
    FT_Int& cmap_index            = FTInfo.cmap_index;
    FT_Render_Mode& render_mode      = FTInfo.render_mode;
@@ -1323,13 +1306,11 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
 
       if (chData) {
          if (bSizeOnly) {
-            //TRACE(_T("Cache hit: GetCharWidth [%c]\n"), *lpString);
             int cx = chData->GetWidth();
             FTInfo.x += (bWidthGDI32 ? gdi32x : cx) + FTInfo.params.charExtra;
             continue;
          }
          glyph_bitmap = (FT_BitmapGlyph)chData->GetGlyph(render_mode);
-         //TRACE(_T("Cache Hit: %wc, size:%d, 0x%8.8X\n"), wch, chData->GetWidth(), glyph_bitmap);
       }
       if (!glyph_bitmap) {
          FT_Glyph glyph = NULL;
@@ -1393,9 +1374,6 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
          }
 
          if (!f_glyph) {
-#ifdef _DEBUG
-            GdiSetBatchLimit(0);
-#endif
             int cx = gdi32x;
             if (bSizeOnly) {
                FTInfo.x += cx;
@@ -1702,16 +1680,6 @@ BOOL FreeTypeTextOut(
    FT_Face freetype_face = FTInfo.freetype_face;
    const LOGFONT& lf = FTInfo.LogFont();
 
-   /* ベースラインの位置
-    * size->metrics.heightが小数部6ビットの固定小数でのフォントの高さ
-    * ascenderはベースラインから上の長さ
-    * units_per_EMはascenderやdescender、heightの長さ単位
-    */
-// TRACE(_T("%ls, asc:%d, des:%d, height: %d, met: %d, scl: %d, uPe: %d\n"),
-//       lf.lfFaceName,
-//       freetype_face->ascender, freetype_face->descender, freetype_face->height,
-//       freetype_face->size->metrics.y_ppem, freetype_face->size->metrics.y_scale, freetype_face->units_per_EM);
-
    FTInfo.x     = nXStart;
    FTInfo.yTop  = nYStart;
 
@@ -1822,9 +1790,6 @@ BOOL FreeTypeGetTextExtentPoint(
    lpSize->cx = FTInfo.x;
    lpSize->cy = FTInfo.pftCache->GetTextMetric(hdc).tmHeight;
    return TRUE;
-
-   //まだ実装してなかった時の残骸
-// return ORIG_GetTextExtentPoint32W(hdc, lpString, cbString, lpSize);
 }
 
 BOOL FreeTypeGetCharWidth(const HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT lpBuffer)

@@ -3,22 +3,14 @@
 #include "ft.h"
 #include "fteng.h"
 
-#if 0
-#define FREETYPE_REQCOUNTMAX  10
-#define GC_TRACE           TRACE
-#define FREETYPE_GC_COUNTER      128
-#else
 #define FREETYPE_REQCOUNTMAX  4096
-#define GC_TRACE           NOP_FUNCTION
 #define FREETYPE_GC_COUNTER      1024
-#endif
 
 FreeTypeFontEngine* g_pFTEngine;
 FT_Library     freetype_library;
 FTC_Manager    cache_man;
 FTC_CMapCache  cmap_cache;
 FTC_ImageCache image_cache;
-
 
 template <class T>
 struct GCCounterSortFunc : public std::binary_function<const T*, const T*, bool>
@@ -65,14 +57,11 @@ void Compact(T** pp, int count, int reduce)
       ppTemp[i]->ResetMruCounter();
    }
 
-   //GC_TRACE(_T("GC:"));
    for (i=reduce; i<count; i++) {
       if (!ppTemp[i])
          break;
-      //GC_TRACE(_T(" %wc"), ppTemp[i]->GetChar());
       ppTemp[i]->Erase();
    }
-   //GC_TRACE(_T("\n"));
    free(ppTemp);
 }
 
@@ -84,9 +73,6 @@ FreeTypeCharData::FreeTypeCharData(FreeTypeCharData** ppCh, FreeTypeCharData** p
 {
    g_pFTEngine->AddMemUsedObj(this);
    AddChar(ppCh);
-#ifdef _DEBUG
-   m_wch = wch;
-#endif
 }
 
 FreeTypeCharData::~FreeTypeCharData()
@@ -165,13 +151,12 @@ void FreeTypeFontCache::AddCharData(WCHAR wch, UINT glyphindex, int width, FT_Bi
    if (glyphindex & 0xffff0000) {
       return;
    }
-
-   //TRACE(_T("AddCharData(0x%p, %wc, 0x%04x)\n"), this, wch, glyphindex);
+   
    FreeTypeCharData** ppChar  = _GetChar(wch);
    FreeTypeCharData** ppGlyph = _GetGlyph(glyphindex);
-   //Assert(!!*ppChar == !!*ppGlyph);
 
-Assert(!(*ppChar && !*ppGlyph));
+   Assert(!(*ppChar && !*ppGlyph));
+
    //Šù‚É‚ ‚ê‚ÎMRUƒJƒEƒ“ƒ^‚ðã‚°‚é
    if (*ppChar) {
       (*ppChar)->SetGlyph(render_mode, glyph);
@@ -185,9 +170,7 @@ Assert(!(*ppChar && !*ppGlyph));
       return;
    }
 
-   //GC
    if (AddIncrement() >= FREETYPE_REQCOUNTMAX) {
-      //TRACE(_T("Compact(0x%p)\n"), this);
       Compact();
    }
 
@@ -206,7 +189,6 @@ void FreeTypeFontCache::AddGlyphData(UINT glyphindex, int width, FT_BitmapGlyph 
       return;
    }
 
-   //TRACE(_T("AddGlyphData(0x%p, 0x%04x, %d)\n"), this, glyphindex, width);
    FreeTypeCharData** ppGlyph = _GetGlyph(glyphindex);
    //Assert(!!*ppChar == !!*ppGlyph);
 
@@ -217,9 +199,7 @@ void FreeTypeFontCache::AddGlyphData(UINT glyphindex, int width, FT_BitmapGlyph 
       return;
    }
 
-   //GC
    if (AddIncrement() >= FREETYPE_REQCOUNTMAX) {
-      //TRACE(_T("Compact(0x%p)\n"), this);
       Compact();
    }
 

@@ -53,6 +53,10 @@
 #include <easyhook.h>
 #endif
 
+/* useful defines */
+#define Assert _ASSERTE
+#define TRACE  NOP_FUNCTION
+
 /* project headers */
 #include "optimize/optimize.h"
 #include "array.h"
