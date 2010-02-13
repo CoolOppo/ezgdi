@@ -29,8 +29,8 @@
 #include <stdlib.h>
 #include "ft2vert.h"
 const struct ivs_otft_desc {
-	int baseChar;
-	int otft_index;
+   int baseChar;
+   int otft_index;
 } ivs_otft[] = {
 #define OTFT_DEF_BEGIN(index) /**/
 #define OTFT_DEF(baseChar, otft_index) { baseChar, otft_index },
@@ -494,50 +494,50 @@ FT_UInt ft2vert_get_gid(const struct ft2vert_st *ft2vert, const FT_UInt gid) {
 }
 
 int glyphs_comp(const void *_a, const void *_b) {
-	const struct ivs_otft_desc *a = (const struct ivs_otft_desc *)_a;
-	const struct ivs_otft_desc *b = (const struct ivs_otft_desc *)_b;
+   const struct ivs_otft_desc *a = (const struct ivs_otft_desc *)_a;
+   const struct ivs_otft_desc *b = (const struct ivs_otft_desc *)_b;
 
-	if (a->baseChar < b->baseChar)
-		return -1;
-	else if (a->baseChar > b->baseChar)
-		return 1;
-	return 0;
+   if (a->baseChar < b->baseChar)
+      return -1;
+   else if (a->baseChar > b->baseChar)
+      return 1;
+   return 0;
 }
 
 FT_UInt ft2_subst_uvs(const FT_Face face, const FT_UInt gid, const FT_UInt vsindex, const FT_UInt baseChar)
 {
-	FT_UInt newglyph;
-	const struct ivs_otft_desc key = { baseChar }, *found;
-	struct ft2vert_st *ft2vert = (struct ft2vert_st *)face->generic.data;
-	if (!ft2vert)
-		return 0;
+   FT_UInt newglyph;
+   const struct ivs_otft_desc key = { baseChar }, *found;
+   struct ft2vert_st *ft2vert = (struct ft2vert_st *)face->generic.data;
+   if (!ft2vert)
+      return 0;
 
-	// 存在するならUVS Subtableから探す
-	if (ft2vert->variantSelectors)
-		return FT_Face_GetCharVariantIndex(face, baseChar, 0xE0100 + vsindex);
+   // 存在するならUVS Subtableから探す
+   if (ft2vert->variantSelectors)
+      return FT_Face_GetCharVariantIndex(face, baseChar, 0xE0100 + vsindex);
 
-	// GSUBテーブルのOpenType featureによりシミュレートする
-	if (vsindex >= sizeof ivs_otft_index / sizeof ivs_otft_index[0])
-		return 0;
-	found = (const struct ivs_otft_desc *)bsearch(&key, ivs_otft + ivs_otft_index[vsindex], ivs_otft_count[vsindex], sizeof(struct ivs_otft_desc), glyphs_comp);
-	if (!found)
-		return 0;
+   // GSUBテーブルのOpenType featureによりシミュレートする
+   if (vsindex >= sizeof ivs_otft_index / sizeof ivs_otft_index[0])
+      return 0;
+   found = (const struct ivs_otft_desc *)bsearch(&key, ivs_otft + ivs_otft_index[vsindex], ivs_otft_count[vsindex], sizeof(struct ivs_otft_desc), glyphs_comp);
+   if (!found)
+      return 0;
 
-	// シミュレートできるfeatureが見つかったので置換を試みる。
-	newglyph = ft2gsub_get_gid(ft2vert, gid, found->otft_index);
-	// 置換に成功したらそれを返す
-	if (newglyph)
-		return newglyph;
-	// フォントがGSUBテーブルに置換定義を持っていない。
-	// 'jp04'を持っているが'jp90'を持っていないときはJIS90フォントとみなし、
-	// 'jp90'を持っているが'jp04'を持っていないときはJIS2004フォントとみなす。
-	// JIS90フォントに'jp90'を要求された場合とJIS2004フォント'jp04'を要求された場合は
-	// デフォルト字形が要求された字形であるとみなしてそのまま返す。
-	if (ft2vert->jp04Lookup && !ft2vert->jp90Lookup && found->otft_index == JP90_LOOKUP_INDEX
-		|| ft2vert->jp90Lookup && !ft2vert->jp04Lookup && found->otft_index == JP04_LOOKUP_INDEX)
-		return gid;
-	// どちらでもなければフォントは要求された字形を持っていないとみなす。
-	return 0;
+   // シミュレートできるfeatureが見つかったので置換を試みる。
+   newglyph = ft2gsub_get_gid(ft2vert, gid, found->otft_index);
+   // 置換に成功したらそれを返す
+   if (newglyph)
+      return newglyph;
+   // フォントがGSUBテーブルに置換定義を持っていない。
+   // 'jp04'を持っているが'jp90'を持っていないときはJIS90フォントとみなし、
+   // 'jp90'を持っているが'jp04'を持っていないときはJIS2004フォントとみなす。
+   // JIS90フォントに'jp90'を要求された場合とJIS2004フォント'jp04'を要求された場合は
+   // デフォルト字形が要求された字形であるとみなしてそのまま返す。
+   if (ft2vert->jp04Lookup && !ft2vert->jp90Lookup && found->otft_index == JP90_LOOKUP_INDEX
+      || ft2vert->jp90Lookup && !ft2vert->jp04Lookup && found->otft_index == JP04_LOOKUP_INDEX)
+      return gid;
+   // どちらでもなければフォントは要求された字形を持っていないとみなす。
+   return 0;
 }
 
 //#endif        /* USE_ZEIT */

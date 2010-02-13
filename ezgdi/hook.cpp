@@ -1,94 +1,82 @@
-// API hook
-//
-// GetProcAddressで得たcall先（関数本体）を直接書き換え、
-// 自分のフック関数にjmpさせる。
-//
-// 内部で元のAPIを使う時は、コードを一度戻してからcall。
-// すぐにjmpコードに戻す。
-//
-// マルチスレッドで 書き換え中にcallされると困るので、
-// CriticalSectionで排他制御しておく。
-//
+#include "stdafx.h"
 
 #include "override.h"
 #include "ft.h"
 #include "fteng.h"
+
 #include <locale.h>
 
 #ifdef USE_DETOURS
 #include <detours.h>
 
-// DATA_foo、ORIG_foo の２つをまとめて定義するマクロ
-#define HOOK_DEFINE(rettype, name, argtype) \
-	rettype (WINAPI * ORIG_##name) argtype;
+/* define ORIG_* WIN32 API prototype */
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   rettype (WINAPI * ORIG_##name) argtype;
 #include "hooklist.h"
 #undef HOOK_DEFINE
 
-//
-
-#define HOOK_DEFINE(rettype, name, argtype) \
-	ORIG_##name = name;
-#pragma optimize("s", on)
+/* initialize ORIG_* with proc address */
 static void hook_initinternal()
 {
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   ORIG_##name = name;
 #include "hooklist.h"
-}
-#pragma optimize("", on)
 #undef HOOK_DEFINE
+}
 
-#define HOOK_DEFINE(rettype, name, argtype) \
-	DetourAttach(&(PVOID&)ORIG_##name, IMPL_##name);
+/* install IMPL_* hooks to replace ORIG_* */
 static void hook_init()
 {
-	DetourRestoreAfterWith();
+   DetourRestoreAfterWith();
 
-	DetourTransactionBegin();
-	DetourUpdateThread(GetCurrentThread());
+   DetourTransactionBegin();
+   DetourUpdateThread(GetCurrentThread());
 
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   DetourAttach(&(PVOID&)ORIG_##name, IMPL_##name);
 #include "hooklist.h"
-
-	LONG error = DetourTransactionCommit();
-
-	if (error != NOERROR) {
-		TRACE(_T("hook_init error: %#x\n"), error);
-	}
-}
 #undef HOOK_DEFINE
-//
 
-#define HOOK_DEFINE(rettype, name, argtype) \
-	DetourDetach(&(PVOID&)ORIG_##name, IMPL_##name);
+   LONG error = DetourTransactionCommit();
+
+   if (error != NOERROR) {
+      TRACE(_T("hook_init error: %#x\n"), error);
+   }
+}
+
 static void hook_term()
 {
-	DetourTransactionBegin();
-	DetourUpdateThread(GetCurrentThread());
+   DetourTransactionBegin();
+   DetourUpdateThread(GetCurrentThread());
 
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   DetourDetach(&(PVOID&)ORIG_##name, IMPL_##name);
 #include "hooklist.h"
-
-	LONG error = DetourTransactionCommit();
-
-	if (error != NOERROR) {
-		TRACE(_T("hook_term error: %#x\n"), error);
-	}
-}
 #undef HOOK_DEFINE
+
+   LONG error = DetourTransactionCommit();
+
+   if (error != NOERROR) {
+      TRACE(_T("hook_term error: %#x\n"), error);
+   }
+}
 
 #else /* EASYHOOK */
 
 #include <easyhook.h>
 
-#define HOOK_DEFINE(rettype, name, argtype, args, modname) \
-	HOOK_TRACE_INFO HOOK_##name; \
-	rettype (WINAPI * FUNC_##name) argtype = NULL; \
-	rettype (WINAPI * ORIG_##name) argtype = NULL; \
-	rettype WINAPI OLD_##name argtype { \
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   HOOK_TRACE_INFO HOOK_##name; \
+   rettype (WINAPI * FUNC_##name) argtype = NULL; \
+   rettype (WINAPI * ORIG_##name) argtype = NULL; \
+   rettype WINAPI OLD_##name argtype { \
       ULONG ACLEntries[] = {0}; \
       LhSetExclusiveACL(ACLEntries, 1, &HOOK_##name); \
-      rettype retval = ##name args; \
+      rettype retval = ##name arglist; \
       LhSetExclusiveACL(ACLEntries, 0, &HOOK_##name); \
       return retval; \
    }
-#include "hooklist2.h"
+#include "hooklist.h"
 #undef HOOK_DEFINE
 
 static FARPROC GetProcAddressInDll(LPCTSTR lpczDllName, LPCSTR lpczProcName)
@@ -101,149 +89,98 @@ static FARPROC GetProcAddressInDll(LPCTSTR lpczDllName, LPCSTR lpczProcName)
    return lpProc;
 }
 
-#define HOOK_DEFINE(rettype, name, argtype, args, modname) \
-	FUNC_##name = (rettype (WINAPI *) argtype) GetProcAddressInDll(_T(modname), #name); \
-   ORIG_##name = OLD_##name;
 static void hook_initinternal()
 {
-#include "hooklist2.h"
-}
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+   FUNC_##name = (rettype (WINAPI *) argtype) GetProcAddressInDll(_T(#modname) _T(".dll"), #name); \
+   ORIG_##name = OLD_##name;
+#include "hooklist.h"
 #undef HOOK_DEFINE
+}
 
 #define FORCE(expr) {if(!SUCCEEDED(NtStatus = (expr))) goto ERROR_ABORT;}
-
-#define HOOK_DEFINE(rettype, name, argtype) \
-    FORCE(LhInstallHook(FUNC_##name, IMPL_##name, (PVOID)0, &HOOK_##name));\
-    FORCE(LhSetExclusiveACL(ACLEntries, 0, &HOOK_##name));
 
 static void hook_init()
 {
    ULONG ACLEntries[1] = {0};
-	NTSTATUS NtStatus;
+   NTSTATUS NtStatus;
+
+#define HOOK_DEFINE(modname, name, rettype, argtype, arglist) \
+    FORCE(LhInstallHook(FUNC_##name, IMPL_##name, (PVOID)0, &HOOK_##name));\
+    FORCE(LhSetExclusiveACL(ACLEntries, 0, &HOOK_##name));
 #include "hooklist.h"
-	FORCE(LhSetGlobalExclusiveACL(ACLEntries, 0));
-	return;
+#undef HOOK_DEFINE
+
+   FORCE(LhSetGlobalExclusiveACL(ACLEntries, 0));
+   return;
 
 ERROR_ABORT:
-	TRACE(_T("hook_init error: %#x\n"), NtStatus);
+   //TRACE(_T("hook_init error: %#x\n"), NtStatus);
+   ;
 }
-#undef HOOK_DEFINE
-//
 
 static void hook_term()
 {
-	LhUninstallAllHooks();
-	LhWaitForPendingRemovals();
+   LhUninstallAllHooks();
+   LhWaitForPendingRemovals();
 }
 
-#endif
+#endif /* DETOURS and EASYHOOK */
 
-//---
+HINSTANCE g_hinstDLL;
+LONG      g_bHookEnabled;
+CTlsData<CThreadLocalInfo> g_TLInfo;
 
-CTlsData<CThreadLocalInfo>	g_TLInfo;
-HINSTANCE					g_hinstDLL;
-LONG						g_bHookEnabled;
-#ifdef _DEBUG
-HANDLE						g_hfDbgText;
-#endif
-
-//void InstallManagerHook();
-//void RemoveManagerHook();
-
-//#include "APITracer.hpp"
-
-//ベースアドレスを変えた方がロードが早くなる
-#if _DLL
-#pragma comment(linker, "/base:0x06540000")
-#endif
-BOOL WINAPI  DllMain(HINSTANCE instance, DWORD reason, LPVOID /*lp*/)
+BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID /*lp*/)
 {
-	switch(reason) {
-	case DLL_PROCESS_ATTACH:
-		//初期化順序
-		//DLL_PROCESS_DETACHではこれの逆順にする
-		//1. CRT関数の初期化
-		//2. クリティカルセクションの初期化
-		//3. TLSの準備
-		//4. CGdippSettingsのインスタンス生成、INI読み込み
-		//5. ExcludeModuleチェック
-		// 6. FreeTypeライブラリの初期化
-		// 7. FreeTypeFontEngineのインスタンス生成
-		// 8. APIをフック
-		// 9. ManagerのGetProcAddressをフック
+   CGdippSettings* pSettings;
 
-		//1
-		_CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
-		_CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG | _CRTDBG_MODE_WNDW);
-		//_CrtSetBreakAlloc(100);
+   switch(reason) {
+   case DLL_PROCESS_ATTACH:
+      _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
+      _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_DEBUG | _CRTDBG_MODE_WNDW);
+      setlocale(LC_ALL, "");
+      g_hinstDLL = instance;
+      hook_initinternal();
 
-		//Operaよ止まれ～
-		//Assert(GetModuleHandleA("opera.exe") == NULL);
+      CCriticalSectionLock::Init();
+      if (!g_TLInfo.ProcessInit()) {
+         return FALSE;
+      }
 
-		setlocale(LC_ALL, "");
-		g_hinstDLL = instance;
-		hook_initinternal();
+      pSettings = CGdippSettings::CreateInstance();
+      if (!pSettings || !pSettings->LoadSettings(instance)) {
+         CGdippSettings::DestroyInstance();
+         return FALSE;
+      }
 
-//APITracer::Start(instance, APITracer::OutputFile);
+      if (!IsProcessExcluded()) {
+         if (!FontLInit())
+            return FALSE;
+         if ( !(g_pFTEngine = new FreeTypeFontEngine) )
+            return FALSE;
 
-		//2, 3
-		CCriticalSectionLock::Init();
-		if (!g_TLInfo.ProcessInit()) {
-			return FALSE;
-		}
+         InterlockedExchange(&g_bHookEnabled, TRUE);
+         hook_init();
+      }
 
-		//4
-		{
-			CGdippSettings* pSettings = CGdippSettings::CreateInstance();
-			if (!pSettings || !pSettings->LoadSettings(instance)) {
-				CGdippSettings::DestroyInstance();
-				return FALSE;
-			}
-		}
-//		if (IsProcessExcluded()) {
-//			return FALSE;
-//		}
+      break;
+   case DLL_THREAD_ATTACH:
+      break;
+   case DLL_THREAD_DETACH:
+      g_TLInfo.ThreadTerm();
+      break;
+   case DLL_PROCESS_DETACH:
+      if (InterlockedExchange(&g_bHookEnabled, FALSE))
+         hook_term();
+      if (g_pFTEngine)
+         delete g_pFTEngine;
 
-		//5
-		if (!IsProcessExcluded()) {
-			//6 ～ 9
-			// FreeType
-			if (!FontLInit()) {
-				return FALSE;
-			}
-			g_pFTEngine = new FreeTypeFontEngine;
-			if (!g_pFTEngine) {
-				return FALSE;
-			}
-
-			InterlockedExchange(&g_bHookEnabled, TRUE);
-			hook_init();
-//			InstallManagerHook();
-		}
-
-//APITracer::Finish();
-		break;
-	case DLL_THREAD_ATTACH:
-		break;
-	case DLL_THREAD_DETACH:
-		g_TLInfo.ThreadTerm();
-		break;
-	case DLL_PROCESS_DETACH:
-//		RemoveManagerHook();
-		if (InterlockedExchange(&g_bHookEnabled, FALSE)) {
-			hook_term();
-		}
-
-		if (g_pFTEngine) {
-			delete g_pFTEngine;
-		}
-		FontLFree();
-
-		CGdippSettings::DestroyInstance();
-		g_TLInfo.ProcessTerm();
-		CCriticalSectionLock::Term();
-		break;
-	}
-	return TRUE;
+      FontLFree();
+      CGdippSettings::DestroyInstance();
+      g_TLInfo.ProcessTerm();
+      CCriticalSectionLock::Term();
+      break;
+   }
+   return TRUE;
 }
-//EOF
