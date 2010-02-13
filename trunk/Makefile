@@ -51,7 +51,7 @@ do-clean: do-cleanobj
 	@-erase /f /q "$(TABASE).*" >NUL 2>NUL
 
 do-cleanobj:
-	@-erase /s /f /q "$(OBJDIR)" >NUL 2>NUL
+	@-erase /s /f /q "$(OBJDIR)" *.idb *.pdb >NUL 2>NUL
 	@-rmdir /s /q "$(OBJDIR)" >NUL 2>NUL
 
 INCDIR = $(SRCDIR) $(FREETYPE_INCDIR) $(EASYHOOK_INCDIR) $(DETOURS_INCDIR)

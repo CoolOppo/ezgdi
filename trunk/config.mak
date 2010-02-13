@@ -63,21 +63,21 @@ LIB = $(ICPP_COMPILER11)\tbb\ia32\vc9\lib;$(ICPP_COMPILER11)\lib\ia32;$(LIB)
 
 LIBPATH = $(LIB)
 
-CFLAGS_DEBUG = /Od /MTd /FD /RTC1 /Zi /DDEBUG /D_DEBUG
+CFLAGS_DEBUG = /Od /MTd /FD /RTC1 /Zi /W4 /DDEBUG /D_DEBUG
 LDFLAGS_DEBUG = /incremental:no /debug /opt:ref /opt:noicf /map /nodefaultlib:libcmt
 
 !ifdef USE_ICC
 LDFLAGS = /opt:icf /opt:ref
-CFLAGS = /GS- /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /EHsc /DNDEBUG
-CFLAGS_SAFE = /GS- /MT /O1 /GF /Gs /Og /Os /Oi- /Gy /Ob2 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /EHsc /DNDEBUG
+CFLAGS = /GS- /MT /O3 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /DNDEBUG
+CFLAGS_SAFE = /GS- /MT /O1 /GF /Gs /Og /Os /Oi- /Gy /Ob2 /QaxSSE2,SSE3,SSE3,SSE4.1 /Qipo /Qprec-div- /W4 /DNDEBUG
 !  ifdef X86
 CFLAGS_SAFE = $(CFLAGS_SAFE) /Oy
 !  endif
 !else
 LDFLAGS = /opt:icf /opt:ref /ltcg
-CFLAGS = /GF /GL /GS- /Gy /MT /O2 /Oi /Ot /W4 /EHsc /DNDEBUG
+CFLAGS_SAFE = /GF /GL /GS- /Gy /MT /O2 /Oi /Ot /W4 /DNDEBUG
 !  ifdef X86
-CFLAGS = /arch:SSE2 $(CFLAGS)
+CFLAGS_SAFE = /arch:SSE2 $(CFLAGS_SAFE)
 !  endif
 !endif
 

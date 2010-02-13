@@ -1,54 +1,35 @@
-//#include <afxres.h>
-//afxres.hが無い場合はSDK付属のwinresrc.hで代用する(未確認)
 #include <winresrc.h>
-
-//バージョン番号
-//build,revは本家で配布されているバージョンに合わせる
-//major,minorは特に意味無し(わざと本物のgdi32.dllより大きな値にしてあるだけ)
-#define VER_NUMBER		8,0,2007,0927
-#define VER_STRING		"8.0.2007.0927"
-
-//カスタムビルドを作成する時は、VER_CUSTOM_BUILDを有効にすると
-//"コメント"にVER_COMMENTが挿入される
+#define VER_NUMBER		  8,0,2010,0421
+#define VER_STRING		  "8.0.2010.0421"
 #define VER_CUSTOM_BUILD
-#define VER_COMMENT		"Portions of this software are copyright (c) 2005-2007 " \
-						"The FreeType Project (www.freetype.org). All rights reserved."
+#define VER_COMMENT		  "Released under FreeType and GPLv3 licenses"
 
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
-#pragma code_page(932)
-
-#ifndef GDIPP_EXE
-
-VS_VERSION_INFO	VERSIONINFO
-FILEVERSION		VER_NUMBER
-PRODUCTVERSION	VER_NUMBER
-FILEOS			VOS_NT_WINDOWS32
-FILETYPE		VFT_DLL
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION		 VER_NUMBER
+PRODUCTVERSION	 VER_NUMBER
+FILEOS			 VOS_NT_WINDOWS32
+FILETYPE		    VFT_DLL
 {
-	BLOCK "StringFileInfo"
-	{
-		BLOCK "041104B0"
-		{
+   BLOCK "StringFileInfo"
+   {
+      BLOCK "041104B0"
+      {
 #ifdef VER_CUSTOM_BUILD
-			VALUE "Comments",			VER_COMMENT
+         VALUE "Comments",			VER_COMMENT
 #endif
-			VALUE "CompanyName",		"2ch"
-			VALUE "FileDescription",	"The Ultimate Font Rasterizer"
-			VALUE "FileVersion",		VER_STRING
-			VALUE "InternalName",		"gdi++"
-			VALUE "LegalCopyright",		"(C) ◆0x0D/0x20I, 460, 168, Higambana, 555 and sy567. All rights reserved."
-			VALUE "OriginalFilename",	"gdi++.dll"
-			VALUE "ProductName",		"Microsoft(R) Windows(R) Operating System"
-			VALUE "ProductVersion",		VER_STRING
-			VALUE "URL",				"http://drwatson.nobody.jp/gdi++/"
-		}
-	}
-
-	BLOCK "VarFileInfo"
-	{
-		VALUE "Translation", 0x0411 0x04B0
-	}
+         VALUE "CompanyName",       "virtlog"
+         VALUE "FileDescription",   "ezgdi dll"
+         VALUE "FileVersion",       VER_STRING
+         VALUE "InternalName",      "ezgdi"
+         VALUE "LegalCopyright",    "Released under FreeType and GPLv3 licenses."
+         VALUE "OriginalFilename",  "ezgdi.dll"
+         VALUE "ProductName",       "GDI++ ported to EasyHook"
+         VALUE "ProductVersion",	   VER_STRING
+         VALUE "URL",               "http://code.google.com/ezgdi/"
+      }
+   }
 }
 
 /*
@@ -62,8 +43,6 @@ FILETYPE		VFT_DLL
 }
 */
 
-#endif
-
 #ifdef APSTUDIO_INVOKED
-#include "テキストエディタで修正してください"
+#include "Please don't load this file using Visual Studio"
 #endif
