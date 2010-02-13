@@ -742,7 +742,6 @@ ETO_TRY();
          //RECT rc = { 0, 0, textSize.cx, textSize.cy };
          RECT rc = { 0, 0, drawSize.cx, drawSize.cy };
          cache.FillSolidRect(bgcolor, &rc);
-         //TRACE(_T("FillSolidRect={%d,%d,%d,%d}\n"), rc.left, rc.top, rc.right, rc.bottom);
 
          if(fillrect) {
             ORIG_ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, lprc, NULL, 0, NULL);
@@ -781,9 +780,6 @@ ETO_TRY();
 
    //blt + clipping
    if(lprc && (fuOptions & ETO_CLIPPED)) {
-      //TRACE(_T("ClipRect={%d %d %d %d}, pos = (%d,%d)\n"), lprc->left, lprc->top, lprc->right, lprc->bottom,
-      // nXStart, nYStart);
-      //trace(L"ClipRect=%d %d %d %d\n", lprc->left, lprc->top, lprc->right, lprc->bottom);
       const RECT rcBlt = { destPos.x, destPos.y, destPos.x + drawSize.cx, destPos.y + drawSize.cy };
       RECT rcClip = { 0 };
       IntersectRect(&rcClip, &rcBlt, lprc);

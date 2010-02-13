@@ -91,9 +91,6 @@ private:
    int               m_bmpMonoSize; // 〃
 // LONG           m_refcounter;  //参照カウンタ
 
-#ifdef _DEBUG
-   WCHAR          m_wch;         //UCS2文字
-#endif
    NOCOPY(FreeTypeCharData);
 
    //FT_Bitmap::bufferのサイズを返す
@@ -106,11 +103,7 @@ public:
    FreeTypeCharData(FreeTypeCharData** ppCh, FreeTypeCharData** ppGl, WCHAR wch, UINT glyphindex, int width, int mru);
    ~FreeTypeCharData();
 
-#ifdef _DEBUG
-   WCHAR GetChar() const { return m_wch; }
-#else
    WCHAR GetChar() const { return L'?'; }
-#endif
    UINT GetGlyphIndex() const { return m_glyphindex; }
    int GetWidth() const { return m_width; }
 

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <atlbase.h>
-
 template <class T>
 class CArray : public CSimpleArray<T>
 {

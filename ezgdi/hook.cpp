@@ -115,7 +115,7 @@ static void hook_init()
    return;
 
 ERROR_ABORT:
-   //TRACE(_T("hook_init error: %#x\n"), NtStatus);
+   TRACE(_T("hook_init error: %#x\n"), NtStatus);
    ;
 }
 
