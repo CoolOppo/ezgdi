@@ -21,8 +21,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -31,7 +31,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-dbg-x86.dll"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-dbg-x86.dll&#x0D;&#x0A;"
 				Outputs="..\ezgdi-dbg-x86.dll"
 			/>
 			<Tool
@@ -100,8 +100,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -110,7 +110,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-dbg-x64.dll"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-dbg-x64.dll&#x0D;&#x0A;"
 				Outputs="..\ezgdi-dbg-x64.dll"
 			/>
 			<Tool
@@ -180,8 +180,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -191,7 +191,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-x86.dll"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-x86.dll&#x0D;&#x0A;"
 				AdditionalDependencies=""
 				Outputs="..\ezgdi-x86.dll"
 			/>
@@ -209,6 +209,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="&quot;..\..\easyhook-2.6\public&quot;;&quot;..\..\freetype-2.3.11\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;DLL_EXPORTS"
 				StringPooling="true"
@@ -217,6 +218,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="2"
 				WarningLevel="4"
 				DebugInformationFormat="0"
@@ -267,8 +269,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -278,7 +280,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-x64.dll"
+				CommandLine="copy $(OutDir)\$(ProjectName).dll ..\ezgdi-x64.dll&#x0D;&#x0A;"
 				Outputs="..\ezgdi-x64.dll"
 			/>
 			<Tool
@@ -296,6 +298,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="&quot;..\..\easyhook-2.6\public&quot;;&quot;..\..\freetype-2.3.11\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;DLL_EXPORTS"
 				StringPooling="true"
@@ -304,6 +307,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="2"
 				WarningLevel="4"
 				DebugInformationFormat="0"
