@@ -21,8 +21,8 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
 			CharacterSet="1"
@@ -32,7 +32,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\EasyHook32d.dll ..\EasyHook32d.dll"
+				CommandLine="copy $(OutDir)\EasyHook32d.dll ..\EasyHook32d.dll&#x0D;&#x0A;"
 				Outputs="..\EasyHook32d.dll"
 			/>
 			<Tool
@@ -108,8 +108,8 @@
 		</Configuration>
 		<Configuration
 			Name="Debug|x64"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			UseOfATL="1"
 			CharacterSet="1"
@@ -119,7 +119,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\EasyHook64d.dll ..\EasyHook64d.dll"
+				CommandLine="copy $(OutDir)\EasyHook64d.dll ..\EasyHook64d.dll&#x0D;&#x0A;"
 				Outputs="..\EasyHook64d.dll"
 			/>
 			<Tool
@@ -196,8 +196,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -207,7 +207,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\EasyHook32.dll ..\EasyHook32.dll"
+				CommandLine="copy $(OutDir)\EasyHook32.dll ..\EasyHook32.dll&#x0D;&#x0A;"
 				Outputs="EasyHook32.dll"
 			/>
 			<Tool
@@ -225,6 +225,7 @@
 				InlineFunctionExpansion="0"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="&quot;..\..\easyhook-2.6\DriverShared&quot;;&quot;..\..\easyhook-2.6\EasyHookDll&quot;;&quot;..\..\easyhook-2.6\Public&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;EASYHOOK_EXPORTS"
 				StringPooling="true"
@@ -232,10 +233,13 @@
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CallingConvention="2"
 				ForcedIncludeFiles=""
 			/>
@@ -289,8 +293,8 @@
 		</Configuration>
 		<Configuration
 			Name="Release|x64"
-			OutputDirectory="$(PlatformName)-$(ConfigurationName)"
-			IntermediateDirectory="$(PlatformName)-$(ConfigurationName)"
+			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
+			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -300,7 +304,7 @@
 			/>
 			<Tool
 				Name="VCCustomBuildTool"
-				CommandLine="copy $(OutDir)\EasyHook64.dll ..\EasyHook64.dll"
+				CommandLine="copy $(OutDir)\EasyHook64.dll ..\EasyHook64.dll&#x0D;&#x0A;"
 				Outputs="..\EasyHook64.dll"
 			/>
 			<Tool
@@ -318,16 +322,20 @@
 				Optimization="3"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
 				AdditionalIncludeDirectories="&quot;..\..\easyhook-2.6\DriverShared&quot;;&quot;..\..\easyhook-2.6\EasyHookDll&quot;;&quot;..\..\easyhook-2.6\Public&quot;"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_USRDLL;EASYHOOK_EXPORTS"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="2"
+				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="4"
 				Detect64BitPortabilityProblems="true"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 				CallingConvention="2"
 				CompileAs="2"
 				ForcedIncludeFiles=""

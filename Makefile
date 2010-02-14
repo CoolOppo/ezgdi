@@ -19,7 +19,7 @@ clean:
 TABASE = $(PREFIX)-$(ARCH)
 TARGET = $(TABASE).dll
 OBJDIR = build\objs-$(ARCH)
-SRCDIR = ezgdi
+SRCDIR = $(PREFIX)
 
 OBJS = hook.obj override.obj settings.obj cache.obj misc.obj expfunc.obj ft.obj fteng.obj ft2vert.obj gdidll.res
 !ifdef X86
