@@ -106,6 +106,8 @@ HOOK_DEFINE(
    (hdc, lpString, cbString, lpSize)
 )
 
+#if 0
+
 HOOK_DEFINE(
    gdi32,
    CreateFontA,
@@ -132,6 +134,8 @@ HOOK_DEFINE(
       fdwClipPrecision, fdwQuality, fdwPitchAndFamily, lpszFace
    )
 )
+
+#endif
 
 HOOK_DEFINE(
    gdi32,
