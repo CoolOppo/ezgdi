@@ -47,7 +47,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				OmitFramePointers="true"
+				OmitFramePointers="false"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\freetype-2.3.12\include"
 				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY"
@@ -60,7 +60,7 @@
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
 				WarningLevel="4"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 				CompileAs="0"
 			/>
 			<Tool
@@ -125,7 +125,7 @@
 				InlineFunctionExpansion="1"
 				EnableIntrinsicFunctions="true"
 				FavorSizeOrSpeed="1"
-				OmitFramePointers="true"
+				OmitFramePointers="false"
 				WholeProgramOptimization="true"
 				AdditionalIncludeDirectories="..\..\freetype-2.3.12\include"
 				PreprocessorDefinitions="NDEBUG;WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;FT2_BUILD_LIBRARY"
@@ -138,7 +138,7 @@
 				DisableLanguageExtensions="true"
 				RuntimeTypeInfo="false"
 				WarningLevel="4"
-				DebugInformationFormat="0"
+				DebugInformationFormat="3"
 				CompileAs="0"
 			/>
 			<Tool

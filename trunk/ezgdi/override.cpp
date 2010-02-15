@@ -184,6 +184,8 @@ BOOL WINAPI IMPL_CreateProcessW(LPCWSTR lpApp, LPWSTR lpCmd, LPSECURITY_ATTRIBUT
    return ORIG_CreateProcessW(lpApp, lpCmd, pa, ta, bInherit, dwFlags, lpEnv, lpDir, psi, ppi);
 }
 
+#if 0
+
 HFONT WINAPI IMPL_CreateFontA(int nHeight, int nWidth, int nEscapement, int nOrientation, int fnWeight, DWORD fdwItalic, DWORD fdwUnderline, DWORD fdwStrikeOut, DWORD fdwCharSet, DWORD fdwOutputPrecision, DWORD fdwClipPrecision, DWORD fdwQuality, DWORD fdwPitchAndFamily, LPCSTR  lpszFace)
 {
    LOGFONTA lf = {
@@ -205,6 +207,8 @@ HFONT WINAPI IMPL_CreateFontA(int nHeight, int nWidth, int nEscapement, int nOri
       strncpy(lf.lfFaceName, lpszFace, LF_FACESIZE - 1);
    return IMPL_CreateFontIndirectA(&lf);
 }
+
+#endif
 
 HFONT WINAPI IMPL_CreateFontW(int nHeight, int nWidth, int nEscapement, int nOrientation, int fnWeight, DWORD fdwItalic, DWORD fdwUnderline, DWORD fdwStrikeOut, DWORD fdwCharSet, DWORD fdwOutputPrecision, DWORD fdwClipPrecision, DWORD fdwQuality, DWORD fdwPitchAndFamily, LPCWSTR lpszFace)
 {
@@ -427,7 +431,6 @@ CleanUp:
       free(lpDxW);
    return result;
 }
-
 
 typedef enum {
    ETOE_OK           = 0,
@@ -908,4 +911,4 @@ HRESULT WINAPI IMPL_ScriptTextOut(
 
    return hr;
 }
-//EOF
+
