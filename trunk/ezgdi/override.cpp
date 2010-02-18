@@ -146,12 +146,12 @@ BOOL WINAPI IMPL_GetTextExtentPoint32W(HDC hdc, LPCWSTR lpString, int cbString, 
 
 BOOL WINAPI IMPL_GetTextExtentPointA(HDC hdc, LPCSTR lpString, int cbString, LPSIZE lpSize)
 {
-   return _GetTextExtentPoint32AorW(hdc, lpString, cbString, lpSize, ORIG_GetTextExtentPoint32A);
+   return _GetTextExtentPoint32AorW(hdc, lpString, cbString, lpSize, ORIG_GetTextExtentPointA);
 }
 
 BOOL WINAPI IMPL_GetTextExtentPointW(HDC hdc, LPCWSTR lpString, int cbString, LPSIZE lpSize)
 {
-   return _GetTextExtentPoint32AorW(hdc, lpString, cbString, lpSize, ORIG_GetTextExtentPoint32W);
+   return _GetTextExtentPoint32AorW(hdc, lpString, cbString, lpSize, ORIG_GetTextExtentPointW);
 }
 
 BOOL WINAPI IMPL_GetCharWidthW(HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT lpBuffer)
@@ -207,8 +207,6 @@ HFONT WINAPI IMPL_CreateFontA(int nHeight, int nWidth, int nEscapement, int nOri
       strncpy(lf.lfFaceName, lpszFace, LF_FACESIZE - 1);
    return IMPL_CreateFontIndirectA(&lf);
 }
-
-#endif
 
 HFONT WINAPI IMPL_CreateFontW(int nHeight, int nWidth, int nEscapement, int nOrientation, int fnWeight, DWORD fdwItalic, DWORD fdwUnderline, DWORD fdwStrikeOut, DWORD fdwCharSet, DWORD fdwOutputPrecision, DWORD fdwClipPrecision, DWORD fdwQuality, DWORD fdwPitchAndFamily, LPCWSTR lpszFace)
 {
@@ -291,6 +289,35 @@ HFONT WINAPI IMPL_CreateFontIndirectW(CONST LOGFONTW *lplf)
    }
 
    HFONT hf = ORIG_CreateFontIndirectW(lplf);
+   if(hf && lplf && !pSettings->LoadOnDemand()) {
+      AddFontToFT(lplf->lfFaceName, lplf->lfWeight, !!lplf->lfItalic);
+   }
+   return hf;
+}
+
+#endif
+
+HFONT  WINAPI IMPL_CreateFontIndirectExW(CONST ENUMLOGFONTEXDVW *lpelf)
+{
+   if(!lpelf)
+      return ORIG_CreateFontIndirectExW(lpelf);
+
+   LOGFONTW const *lplf = &lpelf->elfEnumLogfontEx.elfLogFont;
+
+   if(!lplf)
+      return ORIG_CreateFontIndirectExW(lpelf);
+
+   const CGdippSettings* pSettings = CGdippSettings::GetInstance();
+   if (pSettings->IsFontExcluded(lplf->lfFaceName)) {
+      return ORIG_CreateFontIndirectExW(lpelf);
+   }
+
+   LOGFONT lf;
+   if (pSettings->CopyForceFont(lf, *lplf)) {
+      lplf = &lf;
+   }
+
+   HFONT hf = ORIG_CreateFontIndirectExW(lpelf);
    if(hf && lplf && !pSettings->LoadOnDemand()) {
       AddFontToFT(lplf->lfFaceName, lplf->lfWeight, !!lplf->lfItalic);
    }
@@ -525,7 +552,7 @@ BOOL WINAPI IMPL_ExtTextOutW(HDC hdc, int nXStart, int nYStart, UINT fuOptions, 
    // サロゲートや合成を含む場合はオリジナルの関数にぶん投げる
    // Uniscribe経由でETO_GLYPH_INDEXフラグ付きで戻ってくる
    // ビットマップフォントやフォールバック時などETO_GLYPH_INDEXが付かないこともあるので再入をチェック
-#if USE_DETOURS
+#if 0
    if (!(fuOptions & ETO_GLYPH_INDEX) && !pTLInfo->InUniscribe()
        && ScriptIsComplex(lpString, cbString, SIC_COMPLEX) == S_OK) {
       return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
@@ -573,6 +600,12 @@ ETO_TRY();
    if(align & TA_UPDATECP) {
       GetCurrentPositionEx(hdc, &curPos);
    }
+	if (!align && lpDx && !fuOptions)
+	{
+      BOOL ret = ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
+		pTLInfo->InExtTextOut(false);
+		return ret;
+	}
 
    //copy font
    //フォント周りはコストが大きく、何度もGetCurrentObjectやGetTextMetricsするのは
@@ -593,7 +626,9 @@ ETO_TRY();
 
    // FreeTypeを使うかどうかの判定
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   pSettings->CopyForceFont(lf, lf);
+   if (!(fuOptions & ETO_GLYPH_INDEX))
+      pSettings->CopyForceFont(lf, lf);
+
    if(pSettings->LoadOnDemand()) {
       //要求時ロード
       AddFontToFT(lf.lfFaceName, lf.lfWeight, !!lf.lfItalic);
@@ -773,7 +808,9 @@ ETO_TRY();
       const int* shadow = pSettings->GetShadowParams();
       int xs = shadow[0], ys = shadow[1];
       params.alpha = shadow[2];
-      FreeTypeTextOut(hCanvasDC, cache, xs, ys, lpString, cbString, lpDx, &params, width);
+		if (!FreeTypeTextOut(hCanvasDC, cache, xs, ys, lpString, cbString, lpDx, &params, width)) {
+			ETO_THROW(ETOE_FREETYPE);
+		}
       params.alpha = 0;
    }
    if (!FreeTypeTextOut(hCanvasDC, cache, 0, 0, lpString, cbString, lpDx, &params, width)) {
@@ -807,6 +844,8 @@ ETO_CATCH();
    }
    return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
 }
+
+#if 0
 
 HRESULT WINAPI IMPL_ScriptItemize(
   const WCHAR* pwcInChars, 
@@ -912,3 +951,4 @@ HRESULT WINAPI IMPL_ScriptTextOut(
    return hr;
 }
 
+#endif

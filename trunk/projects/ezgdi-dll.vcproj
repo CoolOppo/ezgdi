@@ -67,7 +67,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="usp10.lib"
 				LinkIncremental="2"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
@@ -147,7 +146,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="usp10.lib"
 				LinkIncremental="2"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
@@ -183,6 +181,7 @@
 			OutputDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			IntermediateDirectory="$(ProjectName)-$(PlatformName)-$(ConfigurationName)"
 			ConfigurationType="2"
+			UseOfATL="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -235,7 +234,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="usp10.lib"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
@@ -243,6 +241,8 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="1"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -325,7 +325,6 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="usp10.lib"
 				LinkIncremental="1"
 				IgnoreAllDefaultLibraries="false"
 				IgnoreDefaultLibraryNames=""
@@ -333,6 +332,8 @@
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="1"
 				TargetMachine="17"
 			/>
 			<Tool
