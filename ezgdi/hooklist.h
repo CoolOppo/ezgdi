@@ -135,8 +135,6 @@ HOOK_DEFINE(
    )
 )
 
-#endif
-
 HOOK_DEFINE(
    gdi32,
    CreateFontW,
@@ -178,6 +176,15 @@ HOOK_DEFINE(
    HFONT,
    (CONST LOGFONTW *lplf),
    (lplf)
+)
+#endif
+
+HOOK_DEFINE(
+   gdi32,
+   CreateFontIndirectExW,
+   HFONT,
+   (CONST ENUMLOGFONTEXDVW *lpelf),
+   (lpelf)
 )
 
 HOOK_DEFINE(
@@ -246,6 +253,8 @@ HOOK_DEFINE(
    (hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx)
 )
 
+#if 0
+
 HOOK_DEFINE(
    usp10,
    ScriptItemize,
@@ -306,3 +315,6 @@ HOOK_DEFINE(
       pwGlyphs, cGlyphs, piAdvance, piJustify, pGoffset
    )
 )
+
+#endif
+

@@ -36,6 +36,7 @@ public:
       return m_bInExtTextOut;
    }
 
+#if 0
    void InUniscribe(bool b)
    {
       m_bInUniscribe = b;
@@ -44,6 +45,7 @@ public:
    {
       return m_bInUniscribe;
    }
+#endif
 };
 
 extern CTlsData<CThreadLocalInfo>   g_TLInfo;
