@@ -23,6 +23,17 @@ struct GCCounterSortFunc : public std::binary_function<const T*, const T*, bool>
    }
 };
 
+template <class T>
+struct CacheSizeSortFunc : public std::binary_function<const T*, const T*, bool>
+{
+	bool operator()(const T* arg1, const T* arg2) const
+	{
+		const int cnt1 = arg1 ? arg1->GetCacheSize() : -1;
+		const int cnt2 = arg2 ? arg2->GetCacheSize() : -1;
+		return cnt1 > cnt2;
+	}
+};
+
 struct DeleteCharFunc : public std::unary_function<FreeTypeCharData*&, void>
 {
    void operator()(FreeTypeCharData*& arg) const
@@ -265,9 +276,39 @@ OK:
 //FreeTypeFontEngine
 void FreeTypeFontEngine::Compact()
 {
+	CCriticalSectionLock __lock;
    ResetGCCounter();
    FontListArray& arr = m_arrFontList;
    ::Compact(arr.GetData(), arr.GetSize(), m_nMaxFaces);
+
+	int count, reduce;
+	count  = arr.GetSize();
+	reduce = m_nMaxFaces;
+   FreeTypeFontInfo** pp = arr.GetData();
+	if (!pp || !count || count <= reduce) {
+		return;
+	}
+
+	std::sort(pp, pp + count, CacheSizeSortFunc<FreeTypeFontInfo>());
+	
+	int i;
+	for (i=0; i<reduce; i++) {
+		if (!pp[i])
+			break;
+		pp[i]->ResetMruCounter();
+	}
+
+	for (i=reduce; i<count; i++) {
+		if (!pp[i])
+			break;
+		delete pp[i];
+		pp[i] = NULL;
+	}
+
+	pp = (FreeTypeFontInfo**)_recalloc(pp, reduce*2, sizeof(FreeTypeFontInfo*));
+	arr.m_nAllocSize = reduce * 2;
+	arr.m_nSize = reduce;
+	return;
 }
 
 bool FreeTypeFontEngine::AddFont(LPCTSTR lpFaceName, int weight, bool italic)
@@ -284,7 +325,7 @@ bool FreeTypeFontEngine::AddFont(LPCTSTR lpFaceName, int weight, bool italic)
 
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
    const CFontSettings& fs = pSettings->FindIndividual(lpFaceName);
-   FreeTypeFontInfo* pfi = new FreeTypeFontInfo(arr.GetSize() + 1, lpFaceName, weight, italic, fs, MruIncrement());
+   FreeTypeFontInfo* pfi = new FreeTypeFontInfo(GetFreeId(), lpFaceName, weight, italic, fs, MruIncrement());
    if (!pfi)
       return false;
 
