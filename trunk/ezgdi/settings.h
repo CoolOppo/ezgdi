@@ -82,12 +82,13 @@ class CFontLinkInfo
 {
 public:
    enum {
-      INFOMAX = 15,
+      INFOMAX = 64,
       FONTMAX = 31,
    };
 private:
    LPWSTR info[INFOMAX + 1][FONTMAX + 1];
    LOGFONT syslf;
+   CAtlMap<CString, int> index;
 public:
    CFontLinkInfo();
    ~CFontLinkInfo();
@@ -349,6 +350,9 @@ public:
    }
    void next() {
       ++m_pos;
+   }
+	void prev() {
+      --m_pos;
    }
    bool atend() {
       return !!(m_pos >= m_endpos);

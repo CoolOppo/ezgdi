@@ -37,6 +37,8 @@
 
 /* atl mfc headers */
 #include <atlbase.h>
+#include <atlcoll.h>
+#include <atlstr.h>
 
 /* freetype headers */
 #include <freetype/config/ftheader.h>

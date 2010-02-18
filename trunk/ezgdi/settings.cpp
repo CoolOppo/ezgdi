@@ -701,6 +701,96 @@ CFontLinkInfo::~CFontLinkInfo()
 
 void CFontLinkInfo::init()
 {
+   /* get default gui font: MS Gui Dlg*/
+   HGDIOBJ h = GetStockObject(DEFAULT_GUI_FONT);
+   GetObject(h, sizeof syslf, &syslf);
+
+   /* open registry keys */
+   const TCHAR rkFontLink[] = _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink");
+   const TCHAR rkFontName[] = _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
+   HKEY hkFontLink = NULL, hkFontName = NULL;
+   if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, rkFontLink, 0, KEY_QUERY_VALUE, &hkFontLink))
+      goto init_error;
+   if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, rkFontName, 0, KEY_QUERY_VALUE, &hkFontName))
+      goto init_error;
+
+#define STRMAX 0x2000
+
+   int i = 0, row = 0;
+   while (row < INFOMAX) {
+      TCHAR fname[STRMAX], flink[STRMAX];
+      DWORD fname_len = STRMAX, flink_len = STRMAX * sizeof(TCHAR);
+      DWORD regtype;
+
+      /* get next font link */
+      LONG rc = RegEnumValue(hkFontLink, i++, fname, &fname_len, 0, &regtype, (LPBYTE)flink, &flink_len);
+      if (rc == ERROR_NO_MORE_ITEMS || rc != ERROR_SUCCESS)
+         break;
+      if (regtype != REG_MULTI_SZ)
+         continue;
+
+      int col = 0;
+      info[row][col++] = _tcsdup(fname);
+
+      LPCTSTR linep = flink;
+      /* enum all lines in REG_MULTI_SZ */
+      for (LPCTSTR linep = flink; col < FONTMAX && *linep; linep += _tcslen(linep) + 1) {
+         TCHAR linkfont[STRMAX];
+         TCHAR linkfile[STRMAX];
+         StringCchCopy(linkfile, STRMAX, linep);
+
+         LPTSTR p = _tcsrchr(linkfile, _T(',')); /* find last ',' */
+         if (p && iswdigit(*(p + 1))) /* ',' in fontlink, and 1-9 after ',' */
+            continue;
+         if (p && !iswdigit(*(p + 1))) /* ',' in fontlink, and no digit after ',' */
+            StringCchCopy(linkfont, STRMAX, p + 1);
+         
+         if (!p) { /* no ',' in fontlink, check fontname in hkFontName */
+            for(int j = 0; ; ++j) {
+               TCHAR name[STRMAX], file[STRMAX];
+               DWORD name_len = STRMAX, file_len = STRMAX * sizeof(TCHAR);
+               DWORD regtype;
+
+               LONG rc = RegEnumValue(hkFontName, j, name, &name_len, 0, &regtype, (LPBYTE)file, &file_len);
+               if (rc == ERROR_NO_MORE_ITEMS || rc != ERROR_SUCCESS)
+                  break;
+               if (regtype != REG_SZ)
+                  continue;
+               if (StrCmpI(file, linkfile) == 0) 
+                  continue;
+               StringCchCopy(linkfont, STRMAX, name);
+               break;
+            }
+            
+            if (p = StrStrI(linkfont, _T(" ("))) /* remove (Truetype) */
+               *p = _T('\0');
+            if (p = StrStrI(linkfont, _T(" &"))) /* remove & OtherName */
+               *p = _T('\0');
+         }
+         info[row][col++] = _tcsdup(linkfont);
+      }
+
+      if (col == 1) {
+         free(info[row][0]);
+      }
+      else {
+         CString key = info[row][0];
+         key.MakeLower();
+         index[key] = row;
+         ++row;
+      }
+   }
+
+#undef STRMAX
+
+   /* free resources */
+init_error:
+   if (hkFontLink)
+      RegCloseKey(hkFontLink);
+   if (hkFontName)
+      RegCloseKey(hkFontName);
+
+#if 0
    const TCHAR REGKEY1[] = _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink");
    const TCHAR REGKEY2[] = _T("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Fonts");
 
@@ -737,7 +827,14 @@ void CFontLinkInfo::init()
       for (LPCWSTR linep = value; col < FONTMAX && *linep; linep += wcslen(linep) + 1) {
          LPCWSTR valp = NULL;
          for (LPCWSTR p = linep; *p; ++p) {
-            if (*p == L',') valp = p + 1;
+            if ( *p == L',' && !iswdigit(*(p+1)) ){
+               LPWSTR lp;
+					StringCchCopy(buf, sizeof(buf)/sizeof(buf[0]), p+1);
+					if (lp=wcschr(buf, L','))
+							*lp = 0;
+					valp = buf;
+					break;
+            }
          }
          if (!valp) {
             for (int k = 0; ; ++k) {
@@ -757,7 +854,9 @@ void CFontLinkInfo::init()
                      *p = 0;
                   }
                }
-               valp = buf;
+               while (buf[wcslen(buf)-1] == L' ')
+						buf[wcslen(buf)-1] = 0;
+					valp = buf;
                break;
             }
          }
@@ -778,6 +877,7 @@ void CFontLinkInfo::init()
 
    HGDIOBJ h = GetStockObject(DEFAULT_GUI_FONT);
    GetObject(h, sizeof syslf, &syslf);
+#endif
 }
 
 void CFontLinkInfo::clear()
@@ -788,16 +888,26 @@ void CFontLinkInfo::clear()
          info[i][j] = NULL;
       }
    }
+   index.RemoveAll();
 }
 
 const LPCWSTR * CFontLinkInfo::lookup(LPCWSTR fontname) const
 {
+   CString key(fontname);
+   key.MakeLower();
+   int row;
+   if (index.Lookup(key, row))
+      return &info[row][1];
+   return NULL;
+
+#if 0
    for (int i = 0; i < INFOMAX && info[i][0]; ++i) {
       if (lstrcmpi(fontname, info[i][0]) == 0) {
          return &info[i][1];
       }
    }
    return NULL;
+#endif
 }
 
 LPCWSTR CFontLinkInfo::get(int row, int col) const
@@ -960,6 +1070,8 @@ CFontFaceNamesEnumerator::CFontFaceNamesEnumerator(LPCWSTR facename) : m_pos(0)
    if (pSettings->IsWinXPorLater() && pSettings->FontLink() &&
       pSettings->FontLoader() == SETTING_FONTLOADER_FREETYPE) {
       srcfacenames[1] = pSettings->GetFontLinkInfo().sysfn();
+		if (0 == _wcsicmp(srcfacenames[0], srcfacenames[1]))
+			srcfacenames[1] = NULL;	
    }
    int destpos = 0;
    for (const LPCWSTR *p = srcfacenames; *p && destpos < MAXFACENAMES; ++p) {
