@@ -59,6 +59,8 @@ struct FreeTypeDrawInfo
    const CFontSettings* pfs;
    FreeTypeFontCache* pftCache;
    FTC_FaceID face_id_list[CFontLinkInfo::FONTMAX * 2 + 1];
+   FT_Int cmap_list[CFontLinkInfo::FONTMAX * 2 + 1];
+
    int face_id_list_num;
 
    //呼び出し前に自分で設定する
@@ -743,10 +745,10 @@ static CGGOGlyphLoader s_GGOGlyphLoader;
 int CALLBACK CGGOGlyphLoader::EnumFontFamProc(const LOGFONT* lplf, const TEXTMETRIC* lptm, DWORD FontType, LPARAM lParam)
 {
    CGGOGlyphLoader* pThis = reinterpret_cast<CGGOGlyphLoader*>(lParam);
-   if (FontType != TRUETYPE_FONTTYPE || lplf->lfCharSet == SYMBOL_CHARSET) {
+   if (FontType != TRUETYPE_FONTTYPE /*|| lplf->lfCharSet == SYMBOL_CHARSET */) {
       return TRUE;
    }
-
+   
    FreeTypeSysFontData* pFont = FreeTypeSysFontData::CreateInstance(lplf->lfFaceName, 0, false);
    if (!pFont) {
       return TRUE;
@@ -754,9 +756,9 @@ int CALLBACK CGGOGlyphLoader::EnumFontFamProc(const LOGFONT* lplf, const TEXTMET
 
    const FT_Glyph_Class *clazz = NULL;
    FT_Face face = pFont->GetFace();
-   FT_Error err = FT_Set_Pixel_Sizes(face, 0, 9);
+   FT_Error err = FT_Set_Pixel_Sizes(face, 0, 12);
    if (!err) {
-      err = FT_Load_Char(face, lptm->tmDefaultChar, FT_LOAD_NO_BITMAP);
+      err = FT_Load_Char(face, lptm->tmDefaultChar, FT_LOAD_DEFAULT);
       if (!err) {
          FT_Glyph glyph;
          err = FT_Get_Glyph(face->glyph, &glyph);
@@ -1006,6 +1008,9 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    int height = 0;
 
    const LOGFONTW& lf = FTInfo.LogFont();
+	if (lf.lfFaceName == NULL)
+		return FALSE;
+
    render_mode    = FT_RENDER_MODE_NORMAL;
    if (FTInfo.params.alpha < 1)
       FTInfo.params.alpha = 1;
@@ -1013,7 +1018,6 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    FTInfo.face_id_list_num = 0;
    //Assert(_tcsicmp(lf.lfFaceName, _T("@Arial Unicode MS")) != 0);
    pfi = NULL;
-   bool f_addfont = false;
    do {
       CFontFaceNamesEnumerator fn(lf.lfFaceName);
       for ( ; !fn.atend(); fn.next()) {
@@ -1022,12 +1026,13 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
             if (!pfi) pfi = pfitemp;
             FTInfo.face_id_list[FTInfo.face_id_list_num++] = (FTC_FaceID)pfitemp->GetId();
          }
-      }
-      if (!f_addfont) {
-         AddFontToFT(lf.lfFaceName, lf.lfWeight, !!lf.lfItalic);
-         f_addfont = true;
-         continue;
-      }
+			else {
+				if (g_pFTEngine->AddFont(fn, lf.lfWeight, !!lf.lfItalic))
+					fn.prev();
+				else
+					break;
+			}
+	   }
    } while (0);
 
    if (!pfi) {
@@ -1035,15 +1040,21 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    }
 
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   pfs = &pfi->GetFontSettings();
-   // グリフ切り替え情報取得のため常に必要
-   face_id = (FTC_FaceID)pfi->GetId();
-   if (FTC_Manager_LookupFace(cache_man, face_id, &freetype_face))
-      return FALSE;
-   cmap_index = FT_Get_Charmap_Index(freetype_face->charmap);
-   switch (pSettings->FontLoader()) {
-   case SETTING_FONTLOADER_FREETYPE:
-      {
+	pfs = &pfi->GetFontSettings();
+	switch (pSettings->FontLoader()) {
+	case SETTING_FONTLOADER_FREETYPE:
+		{			
+			for (int i=FTInfo.face_id_list_num-1; i>=0; i--)
+			{
+				if(!FTC_Manager_LookupFace(cache_man, FTInfo.face_id_list[i], &freetype_face))
+					FTInfo.cmap_list[i] = FT_Get_Charmap_Index(freetype_face->charmap);
+				else
+					return FALSE;
+			}
+			face_id = (FTC_FaceID)pfi->GetId();
+
+			cmap_index = FTInfo.cmap_list[0];
+
          FTC_ScalerRec scaler = { 0 };
          scaler.face_id = face_id;
          scaler.width   = lf.lfWidth;
@@ -1123,7 +1134,7 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
       }*/
       break;
    case SETTING_FONTLOADER_WIN32:
-      font_type.face_id = face_id;
+      font_type.face_id = (FTC_FaceID) - 1;
       font_type.width   = -1;
       font_type.height  = -1;
       break;
@@ -1261,7 +1272,6 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
 {
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
    const FT_Face freetype_face = FTInfo.freetype_face;
-   const FT_Int cmap_index = FTInfo.cmap_index;
    const FT_Bool useKerning = FTInfo.useKerning;
    FT_Render_Mode render_mode = FTInfo.render_mode;
    const int AAMode = FTInfo.pfs->GetAntiAliasMode();
@@ -1333,7 +1343,7 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
                   glyph_index = FTC_CMapCache_Lookup(
                      cmap_cache,
                      FTInfo.face_id_list[i],
-                     cmap_index,
+                     FTInfo.cmap_list[i],
                      wch);
                   if (glyph_index != 0) {
                      f_glyph = true;
@@ -1670,8 +1680,11 @@ BOOL FreeTypeTextOut(
    LOGFONTW* lplf = NULL;
    LOGFONTW lfForce = { 0 };
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   if (pSettings->CopyForceFont(lfForce, *params->lplf))
-      lplf = &lfForce;
+	if (!(params->etoOptions & ETO_GLYPH_INDEX))
+	{
+		if (pSettings->CopyForceFont(lfForce, *params->lplf))
+			lplf = &lfForce;
+	}
 
    FreeTypeDrawInfo FTInfo(*params, hdc, lplf, &cache, lpDx);
    if(!FreeTypePrepare(FTInfo))
@@ -1934,9 +1947,19 @@ FT_Error face_requester(
    // Charmapを設定しておく
    ret = FT_Select_Charmap(face, FT_ENCODING_UNICODE);
    if(ret != FT_Err_Ok){
-      FT_Done_Face(face);
-      return ret;
+      ret = FT_Select_Charmap(face, FT_ENCODING_MS_SYMBOL);
+		if(ret != FT_Err_Ok)
+		{
+			FT_Done_Face(face);
+			return ret;
+		}
    }
+	
+   if(fontname[0] == _T('@')){
+		struct ft2vert_st *vert = ft2vert_init(face);
+		face->generic.data = vert;
+		face->generic.finalizer = VertFinalizer;
+	}
 
    // グリフ置換のため常に必要
    struct ft2vert_st *vert = ft2vert_init(face);
