@@ -74,15 +74,15 @@ DWORD HookApiRegOption()
 }
 
 /* define easyhook hooks variable */
-#define HOOK_DEFINE(rettype, name, argtype) \
+#define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
             HOOK_TRACE_INFO EH_##name = {NULL};
-#include "hooklist.h"
+#include "hooklist2.h"
 #undef HOOK_DEFINE
 
 /* define detours original function pointer */
-#define HOOK_DEFINE(rettype, name, argtype) \
+#define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
             rettype (WINAPI * ORIG_##name) argtype;
-#include "hooklist.h"
+#include "hooklist2.h"
 #undef HOOK_DEFINE
 
 #define OPEN_ARGS(...) __VA_ARGS__
@@ -90,8 +90,10 @@ DWORD HookApiRegOption()
 /* define hooked implementations */
 #define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
             rettype WINAPI IMPL_##name argtype { \
-               TRACE(_T("Thread 0x%x: ") _T(#name) _T("\t(") _T(fmt) _T(")\n"), GetCurrentThreadId(), OPEN_ARGS args); \
-               return ORIG_##name args; \
+               TRACE(_T("Thread 0x%x: entering ") _T(#name) _T("\t(") _T(fmt) _T(")\n"), GetCurrentThreadId(), OPEN_ARGS args); \
+               rettype const & retval = ORIG_##name args; \
+               TRACE(_T("Thread 0x%x:  exiting ") _T(#name) _T("\t(") _T(fmt) _T(")\n"), GetCurrentThreadId(), OPEN_ARGS args); \
+               return retval; \
             }
 #include "hooklist2.h"
 #undef HOOK_DEFINE
@@ -135,15 +137,13 @@ void HookInstall(DWORD dwHookApi)
 
    if (dwHookApi == USE_EASYHOOK) {
       TRACE(_T("Install Easyhook Hooks\n"));
-      DWORD status;
-      BOOL flags;
 
       /* install easyhook hooks */
-      #define HOOK_DEFINE(rettype, name, argtype) \
+      #define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
          TRACE(_T("Installing Hook %s\n"), _T(#name)); \
          EH_FORCE(LhInstallHook(ORIG_##name, IMPL_##name, 0, &EH_##name)); \
          EH_FORCE(LhSetExclusiveACL(ACLEntries, 0, &EH_##name));
-      #include "hooklist.h"
+      #include "hooklist2.h"
       #undef HOOK_DEFINE
 
       EH_FORCE(LhSetGlobalExclusiveACL(ACLEntries, 0));
@@ -155,10 +155,10 @@ void HookInstall(DWORD dwHookApi)
       DetourUpdateThread(GetCurrentThread());
 
       /* attach detours hooks */
-      #define HOOK_DEFINE(rettype, name, argtype) \
+      #define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
          TRACE(_T("Installing Hook %ls\n"), _T(#name)); \
          DetourAttach(&(PVOID&)ORIG_##name, IMPL_##name);
-      #include "hooklist.h"
+      #include "hooklist2.h"
       #undef HOOK_DEFINE
 
       DetourTransactionCommit();
@@ -181,9 +181,9 @@ void HookUninstall(DWORD dwHookApi)
       DetourUpdateThread(GetCurrentThread());
 
       /* detach detours hooks */
-      #define HOOK_DEFINE(rettype, name, argtype) \
+      #define HOOK_DEFINE(rettype, name, argtype, args, fmt, modname) \
          DetourDetach(&(PVOID&)ORIG_##name, IMPL_##name);
-      #include "hooklist.h"
+      #include "hooklist2.h"
       #undef HOOK_DEFINE
 
       DetourTransactionCommit();
