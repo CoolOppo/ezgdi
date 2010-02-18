@@ -216,6 +216,8 @@ private:
    void Compact();
 
 public:
+	int GetCacheSize() const { return m_cache.GetSize(); }
+
    FreeTypeFontInfo(int n, LPCTSTR name, int weight, bool italic, const CFontSettings& set, int mru)
       : m_id(n), m_weight(weight), m_italic(italic), m_hash(name)
       , FreeTypeMruCounter(mru)
@@ -297,6 +299,7 @@ private:
    FontListArray  m_arrFontList;
    int            m_nMaxFaces;
    int            m_nMemUsed;
+   int             m_nId;
 
    void Compact();
 
@@ -309,6 +312,7 @@ public:
       m_nMaxFaces = pSettings->CacheMaxFaces();
       if (m_nMaxFaces == 0)
          m_nMaxFaces = FTC_MAX_FACES_DEFAULT;
+      m_nId = 0;
    }
    ~FreeTypeFontEngine()
    {
@@ -349,6 +353,10 @@ public:
    void SubMemUsedObj(T* /*p*/)
    {
       SubMemUsed(sizeof(T));
+   }
+   int GetFreeId()
+   {
+      return ++m_nId;
    }
 };
 
