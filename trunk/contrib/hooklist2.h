@@ -95,6 +95,22 @@ HOOK_DEFINE(
 )
 
 HOOK_DEFINE(
+   HFONT, CreateFontIndirectExA,
+   (CONST ENUMLOGFONTEXDVA *lpelf),
+   (lpelf),
+   "lpelf(%p)",
+   "gdi32.dll"
+)
+
+HOOK_DEFINE(
+   HFONT, CreateFontIndirectExW,
+   (CONST ENUMLOGFONTEXDVW *lpelf),
+   (lpelf),
+   "lpelf(%p)",
+   "gdi32.dll"
+)
+
+HOOK_DEFINE(
    BOOL, GetCharWidthW,
    (HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT lpBuffer),
    (hdc, iFirstChar, iLastChar, lpBuffer),
