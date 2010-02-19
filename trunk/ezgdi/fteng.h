@@ -322,7 +322,7 @@ public:
          delete arr[n];
    }
 
-   bool AddFont(LPCTSTR lpFaceName, int weight, bool italic);
+   FreeTypeFontInfo* AddFont(LPCTSTR lpFaceName, int weight, bool italic);
    int  GetFontIdByName(LPCTSTR lpFaceName, int weight, bool italic);
 // LPCTSTR GetFontById(int faceid, int& weight, bool& italic);
    FreeTypeFontInfo* FindFont(LPCTSTR lpFaceName, int weight, bool italic);

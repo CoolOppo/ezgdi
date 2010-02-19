@@ -311,12 +311,12 @@ void FreeTypeFontEngine::Compact()
 	return;
 }
 
-bool FreeTypeFontEngine::AddFont(LPCTSTR lpFaceName, int weight, bool italic)
+FreeTypeFontInfo* FreeTypeFontEngine::AddFont(LPCTSTR lpFaceName, int weight, bool italic)
 {
    CCriticalSectionLock __lock;
 
    if(lpFaceName == NULL || _tcslen(lpFaceName) == 0 || FontExists(lpFaceName, weight, italic))
-      return false;
+      return NULL;
 
    FontListArray& arr = m_arrFontList;
    if (AddIncrement() > m_nMaxFaces) {
@@ -327,15 +327,17 @@ bool FreeTypeFontEngine::AddFont(LPCTSTR lpFaceName, int weight, bool italic)
    const CFontSettings& fs = pSettings->FindIndividual(lpFaceName);
    FreeTypeFontInfo* pfi = new FreeTypeFontInfo(GetFreeId(), lpFaceName, weight, italic, fs, MruIncrement());
    if (!pfi)
-      return false;
+      return NULL;
 
-   bool ret = !!arr.Add(pfi);
-   if (!ret) {
+   if (!arr.Add(pfi))
+      goto error_free;
+
+   return pfi;
+
+error_free:
+   if (pfi)
       delete pfi;
-      return false;
-   }
-
-   return true;
+   return NULL;
 }
 
 int FreeTypeFontEngine::GetFontIdByName(LPCTSTR lpFaceName, int weight, bool italic)
