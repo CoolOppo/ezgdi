@@ -82,13 +82,14 @@ class CFontLinkInfo
 {
 public:
    enum {
-      INFOMAX = 64,
+      INFOMAX = 63,
       FONTMAX = 31,
    };
 private:
-   LPWSTR info[INFOMAX + 1][FONTMAX + 1];
+   LPWSTR info[INFOMAX + 1][2 * FONTMAX + 1];
    LOGFONT syslf;
    CAtlMap<CString, int> index;
+
 public:
    CFontLinkInfo();
    ~CFontLinkInfo();
@@ -96,7 +97,6 @@ public:
    void clear();
    const LPCWSTR sysfn() const { return syslf.lfFaceName; }
    const LPCWSTR * lookup(LPCWSTR fontname) const;
-   LPCWSTR get(int row, int col) const;
 };
 
 class CFontSubstitutesInfo;
@@ -156,8 +156,6 @@ private:
    bool m_bEnableShadow       : 1;
    bool m_bFontLink           : 1;
 
-   //‚»‚êˆÈŠO
-   bool m_bIsWinXPorLater        : 1;
    bool m_bRunFromGdiExe         : 1;
    bool m_bIsInclude          : 1;
    bool m_bDelayedInit           : 1;
@@ -234,7 +232,6 @@ private:
       , m_bEnableShadow(false)
       , m_bFontLink(false)
 //    , m_bEnableKerning(false)
-      , m_bIsWinXPorLater(false)
       , m_bRunFromGdiExe(false)
       , m_bIsInclude(false)
       , m_bDelayedInit(false)
@@ -306,8 +303,6 @@ public:
 
    bool CopyForceFont(LOGFONT& lf, const LOGFONT& lfOrg) const;
 
-   //‚»‚êˆÈŠO
-   bool IsWinXPorLater() const { return m_bIsWinXPorLater; }
    bool IsInclude() const { return m_bIsInclude; }
 // bool IsHDBench() const { return m_bIsHDBench; }
    bool RunFromGdiExe() const { return m_bRunFromGdiExe; }
@@ -336,25 +331,19 @@ public:
 class CFontFaceNamesEnumerator
 {
 private:
-   enum {
-      MAXFACENAMES = CFontLinkInfo::FONTMAX * 2 + 1,
-   };
-   LPCWSTR m_facenames[MAXFACENAMES];
+   LPCWSTR m_facenames[1];
+   const LPCWSTR *p_facename;
    int m_pos;
-   int m_endpos;
    CFontFaceNamesEnumerator();
 public:
    CFontFaceNamesEnumerator(LPCWSTR facename);
    operator LPCWSTR () {
-      return m_facenames[m_pos];
+      return *p_facename;
    }
    void next() {
-      ++m_pos;
-   }
-	void prev() {
-      --m_pos;
+      ++p_facename;
    }
    bool atend() {
-      return !!(m_pos >= m_endpos);
+      return NULL == *p_facename;
    }
 };

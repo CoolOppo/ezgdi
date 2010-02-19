@@ -96,6 +96,8 @@ void AddFontToFT(LPCTSTR lpszFace, int weight, bool italic)
 {
 // CCriticalSectionLock __lock;
    if (lpszFace) {
+      g_pFTEngine->AddFont(lpszFace, weight, italic);
+
       CFontFaceNamesEnumerator fn(lpszFace);
       for ( ; !fn.atend(); fn.next()) {
          g_pFTEngine->AddFont(fn, weight, italic);
