@@ -73,15 +73,3 @@ BOOL FreeTypeGetCharWidth(
    UINT iLastChar,
    LPINT lpBuffer
    );
-void FreeTypeSubstGlyph(
-   const HDC hdc,
-   const WORD vsindex,
-   const int baseChar,
-   int cChars, 
-   SCRIPT_ANALYSIS* psa, 
-   WORD* pwOutGlyphs, 
-   WORD* pwLogClust, 
-   SCRIPT_VISATTR* psva, 
-   int* pcGlyphs 
-   );
-
