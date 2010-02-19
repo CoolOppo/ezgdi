@@ -51,7 +51,6 @@ struct FreeTypeDrawInfo
 
    //FreeTypePrepareが設定する
    FT_Face freetype_face;
-   FT_Int cmap_index;
    FT_Bool useKerning;
    FT_Render_Mode render_mode;
    FTC_ImageTypeRec font_type;
@@ -60,7 +59,6 @@ struct FreeTypeDrawInfo
    FreeTypeFontCache* pftCache;
    FTC_FaceID face_id_list[CFontLinkInfo::FONTMAX * 2 + 1];
    FT_Int cmap_list[CFontLinkInfo::FONTMAX * 2 + 1];
-
    int face_id_list_num;
 
    //呼び出し前に自分で設定する
@@ -73,13 +71,14 @@ struct FreeTypeDrawInfo
    FREETYPE_PARAMS params;
 
    FreeTypeDrawInfo(const FREETYPE_PARAMS& fp, HDC dc, LOGFONTW* lf = NULL, CBitmapCache* ca = NULL, const int* dx = NULL)
-      : freetype_face(&dummy_freetype_face), cmap_index(0), useKerning(0)
+      : freetype_face(&dummy_freetype_face), useKerning(0)
       , pfi(NULL), pfs(NULL), pftCache(NULL), face_id_list_num(0)
       , hdc(dc), x(0), yBase(0), yTop(0)
    {
       render_mode = FT_RENDER_MODE_NORMAL;
       ZeroMemory(&font_type, sizeof(font_type));
       ZeroMemory(&face_id_list, sizeof face_id_list);
+      ZeroMemory(&cmap_list, sizeof cmap_list);
       lpDx   = dx;
       pCache = ca;
       params = fp;
@@ -745,7 +744,7 @@ static CGGOGlyphLoader s_GGOGlyphLoader;
 int CALLBACK CGGOGlyphLoader::EnumFontFamProc(const LOGFONT* lplf, const TEXTMETRIC* lptm, DWORD FontType, LPARAM lParam)
 {
    CGGOGlyphLoader* pThis = reinterpret_cast<CGGOGlyphLoader*>(lParam);
-   if (FontType != TRUETYPE_FONTTYPE /*|| lplf->lfCharSet == SYMBOL_CHARSET */) {
+   if (FontType != TRUETYPE_FONTTYPE /*|| lplf->lfCharSet == SYMBOL_CHARSET*/) {
       return TRUE;
    }
    
@@ -997,7 +996,6 @@ public:
 BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
 {
    FT_Face& freetype_face        = FTInfo.freetype_face;
-   FT_Int& cmap_index            = FTInfo.cmap_index;
    FT_Render_Mode& render_mode      = FTInfo.render_mode;
    FTC_ImageTypeRec& font_type      = FTInfo.font_type;
    FreeTypeFontInfo*& pfi        = FTInfo.pfi;
@@ -1014,53 +1012,47 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    render_mode    = FT_RENDER_MODE_NORMAL;
    if (FTInfo.params.alpha < 1)
       FTInfo.params.alpha = 1;
-
-   FTInfo.face_id_list_num = 0;
-   //Assert(_tcsicmp(lf.lfFaceName, _T("@Arial Unicode MS")) != 0);
-   pfi = NULL;
-   do {
-      CFontFaceNamesEnumerator fn(lf.lfFaceName);
-      for ( ; !fn.atend(); fn.next()) {
-         FreeTypeFontInfo* pfitemp = g_pFTEngine->FindFont(fn, lf.lfWeight, !!lf.lfItalic);
-         if (pfitemp) {
-            if (!pfi) pfi = pfitemp;
-            FTInfo.face_id_list[FTInfo.face_id_list_num++] = (FTC_FaceID)pfitemp->GetId();
-         }
-			else {
-				if (g_pFTEngine->AddFont(fn, lf.lfWeight, !!lf.lfItalic))
-					fn.prev();
-				else
-					break;
-			}
-	   }
-   } while (0);
-
-   if (!pfi) {
+   
+   if (! (pfi = g_pFTEngine->FindFont(lf.lfFaceName, lf.lfWeight, !!lf.lfItalic)) )
       return FALSE;
+
+   face_id = (FTC_FaceID)pfi->GetId();
+   FTInfo.face_id_list[0] = face_id;
+   FTInfo.face_id_list_num = 1;
+
+   if(FTC_Manager_LookupFace(cache_man, face_id, &freetype_face)) {
+      Assert(false);
+      return FALSE;
+   }
+
+   FTInfo.cmap_list[0] = FT_Get_Charmap_Index(freetype_face->charmap);
+   
+   if (freetype_face->charmap->encoding != FT_ENCODING_MS_SYMBOL) {
+      CFontFaceNamesEnumerator fn(lf.lfFaceName);
+      for (; !fn.atend(); fn.next()) {
+         FreeTypeFontInfo* pfitemp = g_pFTEngine->FindFont(fn, lf.lfWeight, !!lf.lfItalic);
+         if (!pfitemp) {
+            Assert(false);
+            continue;
+         }
+
+         FTInfo.face_id_list[FTInfo.face_id_list_num] = (FTC_FaceID)pfitemp->GetId();
+         FTInfo.cmap_list[FTInfo.face_id_list_num] = -1;
+         ++FTInfo.face_id_list_num;
+      }
    }
 
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
 	pfs = &pfi->GetFontSettings();
 	switch (pSettings->FontLoader()) {
 	case SETTING_FONTLOADER_FREETYPE:
-		{			
-			for (int i=FTInfo.face_id_list_num-1; i>=0; i--)
-			{
-				if(!FTC_Manager_LookupFace(cache_man, FTInfo.face_id_list[i], &freetype_face))
-					FTInfo.cmap_list[i] = FT_Get_Charmap_Index(freetype_face->charmap);
-				else
-					return FALSE;
-			}
-			face_id = (FTC_FaceID)pfi->GetId();
-
-			cmap_index = FTInfo.cmap_list[0];
-
+		{
          FTC_ScalerRec scaler = { 0 };
          scaler.face_id = face_id;
          scaler.width   = lf.lfWidth;
          if(lf.lfHeight > 0){
             // セル高さ
-            scaler.height = MulDiv(lf.lfHeight, freetype_face->units_per_EM, freetype_face->height);
+            scaler.height = FT_MulDiv(lf.lfHeight, freetype_face->units_per_EM, freetype_face->height);
          }
          else{
             // 文字高さ
@@ -1340,6 +1332,13 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
                glyph_index = wch;
             } else if (wch) {
                for (int i = 0; i < FTInfo.face_id_list_num; ++i) {
+                  if (-1 == FTInfo.cmap_list[i]) {
+                     FT_Face temp_face;
+                     if(FTC_Manager_LookupFace(cache_man, FTInfo.face_id_list[i], &temp_face))
+                        break;
+                     FTInfo.cmap_list[i] = FT_Get_Charmap_Index(temp_face->charmap);
+                  }
+
                   glyph_index = FTC_CMapCache_Lookup(
                      cmap_cache,
                      FTInfo.face_id_list[i],
@@ -1718,7 +1717,7 @@ BOOL FreeTypeTextOut(
             yPos = y + 1;
             height = FT_PosToInt(freetype_face->size->metrics.height);
             thickness =
-               MulDiv(freetype_face->underline_thickness,
+               FT_MulDiv(freetype_face->underline_thickness,
                   freetype_face->size->metrics.y_ppem,
                   freetype_face->units_per_EM);
             break;
@@ -1847,76 +1846,6 @@ BOOL FreeTypeGetCharWidth(const HDC hdc, UINT iFirstChar, UINT iLastChar, LPINT 
 void VertFinalizer(void *object){
    FT_Face face = (FT_Face)object;
    ft2vert_final(face, (struct ft2vert_st *)face->generic.data);
-}
-
-//
-// グリフをIVSで指定された字形をサポートするかどうか調べ、
-// サポートしている場合はグリフを置換する。
-// サポートしていなければ何もしない。
-//
-void FreeTypeSubstGlyph(const HDC hdc, 
-   const WORD vsindex,
-   const int baseChar,
-   int cChars, 
-   SCRIPT_ANALYSIS* psa, 
-   WORD* pwOutGlyphs, 
-   WORD* pwLogClust, 
-   SCRIPT_VISATTR* psva, 
-   int* pcGlyphs 
-   )
-{
-   CThreadLocalInfo* pTLInfo = g_TLInfo.GetPtr();
-   CBitmapCache& cache = pTLInfo->BitmapCache();
-   CCriticalSectionLock __lock;
-
-   LOGFONT lf;
-   if (!GetLogFontFromDC(hdc, lf))
-      return;
-
-   FREETYPE_PARAMS params(0, hdc);
-   FreeTypeDrawInfo FTInfo(params, hdc, &lf, &cache);
-   if(!FreeTypePrepare(FTInfo))
-      return;
-
-   FT_UInt glyph_index = ft2_subst_uvs(FTInfo.freetype_face, pwOutGlyphs[*pcGlyphs - 1], vsindex, baseChar);
-   if (glyph_index) {
-      pwOutGlyphs[*pcGlyphs - 1] = glyph_index; // 置換を実行
-      // ASCII空白のグリフを取得
-      glyph_index = FTC_CMapCache_Lookup(
-         cmap_cache,
-         FTInfo.font_type.face_id,
-         FTInfo.cmap_index,
-         ' ');
-      // ゼロ幅グリフにする
-      pwOutGlyphs[*pcGlyphs] = glyph_index;
-      psva[*pcGlyphs].uJustification = SCRIPT_JUSTIFY_NONE;
-      psva[*pcGlyphs].fClusterStart = 0;
-      psva[*pcGlyphs].fDiacritic = 0;
-      psva[*pcGlyphs].fZeroWidth = 1;
-      psva[*pcGlyphs].fReserved = 0;
-      psva[*pcGlyphs].fShapeReserved = 0;
-   } else {
-      // フォントは指定された字形を持たない。IVSのグリフを取得
-      glyph_index = FTC_CMapCache_Lookup(
-         cmap_cache,
-         FTInfo.font_type.face_id,
-         FTInfo.cmap_index,
-         vsindex + 0xE0100);
-      // IVSをサポートしていないフォントはIVSのグリフを持っている可能性もほとんどない。
-      // missing glyphを返すとフォールバックされてしまうため確実に持っていそうなグリフを拾う
-      if (!glyph_index)
-         glyph_index = FTC_CMapCache_Lookup(
-            cmap_cache,
-            FTInfo.font_type.face_id,
-            FTInfo.cmap_index,
-            0x30FB);
-      pwOutGlyphs[*pcGlyphs] = glyph_index;
-      psva[*pcGlyphs] = psva[*pcGlyphs - 1];
-      psva[*pcGlyphs].fClusterStart = 0;
-   }
-   pwLogClust[cChars - 2] = *pcGlyphs;
-   pwLogClust[cChars - 1] = *pcGlyphs;
-   ++*pcGlyphs;
 }
 
 FT_Error face_requester(
