@@ -78,10 +78,6 @@ BOOL IsValidDC(HDC hdc)
 
 BOOL IsProcessExcluded()
 {
-// if (GetModuleHandle(NULL) == GetModuleHandle(_T("gdi++.exe"))) {
-//    return TRUE;
-// }
-
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
    if (pSettings->IsInclude()) {
       if (pSettings->IsProcessIncluded()) {
@@ -183,119 +179,6 @@ BOOL WINAPI IMPL_CreateProcessW(LPCWSTR lpApp, LPWSTR lpCmd, LPSECURITY_ATTRIBUT
 {
    return ORIG_CreateProcessW(lpApp, lpCmd, pa, ta, bInherit, dwFlags, lpEnv, lpDir, psi, ppi);
 }
-
-#if 0
-
-HFONT WINAPI IMPL_CreateFontA(int nHeight, int nWidth, int nEscapement, int nOrientation, int fnWeight, DWORD fdwItalic, DWORD fdwUnderline, DWORD fdwStrikeOut, DWORD fdwCharSet, DWORD fdwOutputPrecision, DWORD fdwClipPrecision, DWORD fdwQuality, DWORD fdwPitchAndFamily, LPCSTR  lpszFace)
-{
-   LOGFONTA lf = {
-      nHeight,
-      nWidth,
-      nEscapement,
-      nOrientation,
-      fnWeight,
-      !!fdwItalic,
-      !!fdwUnderline,
-      !!fdwStrikeOut,
-      (BYTE)fdwCharSet,
-      (BYTE)fdwOutputPrecision,
-      (BYTE)fdwClipPrecision,
-      (BYTE)fdwQuality,
-      (BYTE)fdwPitchAndFamily,
-   };
-   if (lpszFace)
-      strncpy(lf.lfFaceName, lpszFace, LF_FACESIZE - 1);
-   return IMPL_CreateFontIndirectA(&lf);
-}
-
-HFONT WINAPI IMPL_CreateFontW(int nHeight, int nWidth, int nEscapement, int nOrientation, int fnWeight, DWORD fdwItalic, DWORD fdwUnderline, DWORD fdwStrikeOut, DWORD fdwCharSet, DWORD fdwOutputPrecision, DWORD fdwClipPrecision, DWORD fdwQuality, DWORD fdwPitchAndFamily, LPCWSTR lpszFace)
-{
-   LOGFONTW lf = {
-      nHeight,
-      nWidth,
-      nEscapement,
-      nOrientation,
-      fnWeight,
-      !!fdwItalic,
-      !!fdwUnderline,
-      !!fdwStrikeOut,
-      (BYTE)fdwCharSet,
-      (BYTE)fdwOutputPrecision,
-      (BYTE)fdwClipPrecision,
-      (BYTE)fdwQuality,
-      (BYTE)fdwPitchAndFamily,
-   };
-   if (lpszFace)
-      wcsncpy(lf.lfFaceName, lpszFace, LF_FACESIZE - 1);
-   return IMPL_CreateFontIndirectW(&lf);
-}
-
-HFONT WINAPI IMPL_CreateFontIndirectA(CONST LOGFONTA *lplfA)
-{
-   if(!lplfA) {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return NULL;
-   }
-
-   const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   if (pSettings->IsFontExcluded(lplfA->lfFaceName)) {
-      return ORIG_CreateFontIndirectA(lplfA);
-   }
-
-   LOGFONT lf = {
-      lplfA->lfHeight,
-      lplfA->lfWidth,
-      lplfA->lfEscapement,
-      lplfA->lfOrientation,
-      lplfA->lfWeight,
-      lplfA->lfItalic,
-      lplfA->lfUnderline,
-      lplfA->lfStrikeOut,
-      lplfA->lfCharSet,
-      lplfA->lfOutPrecision,
-      lplfA->lfClipPrecision,
-      lplfA->lfQuality,
-      lplfA->lfPitchAndFamily,
-   };
-   MultiByteToWideChar(CP_ACP, 0, lplfA->lfFaceName, LF_FACESIZE, lf.lfFaceName, LF_FACESIZE);
-
-   LOGFONT* lplf = &lf;
-   if (pSettings->CopyForceFont(lf, lf)) {
-      lplf = &lf;
-   }
-
-   HFONT hf = ORIG_CreateFontIndirectW(lplf);
-   if(hf && lplf && !pSettings->LoadOnDemand()) {
-      AddFontToFT(lplf->lfFaceName, lplf->lfWeight, !!lplf->lfItalic);
-   }
-   return hf;
-}
-
-HFONT WINAPI IMPL_CreateFontIndirectW(CONST LOGFONTW *lplf)
-{
-   if(!lplf) {
-      SetLastError(ERROR_INVALID_PARAMETER);
-      return NULL;
-   }
-
-   const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   if (pSettings->IsFontExcluded(lplf->lfFaceName)) {
-      return ORIG_CreateFontIndirectW(lplf);
-   }
-
-   LOGFONT lf;
-   if (pSettings->CopyForceFont(lf, *lplf)) {
-      lplf = &lf;
-   }
-
-   HFONT hf = ORIG_CreateFontIndirectW(lplf);
-   if(hf && lplf && !pSettings->LoadOnDemand()) {
-      AddFontToFT(lplf->lfFaceName, lplf->lfWeight, !!lplf->lfItalic);
-   }
-   return hf;
-}
-
-#endif
 
 HFONT  WINAPI IMPL_CreateFontIndirectExW(CONST ENUMLOGFONTEXDVW *lpelf)
 {
@@ -416,10 +299,6 @@ BOOL WINAPI IMPL_ExtTextOutA(HDC hdc, int nXStart, int nYStart, UINT fuOptions, 
    //とりあえずオリジナルに飛ばす
    if (fuOptions & ETO_GLYPH_INDEX)
       return ORIG_ExtTextOutA(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
-
-   //HDBENCHチート
-// if (lpString && cbString == 7 && pSettings->IsHDBench() && (memcmp(lpString, "HDBENCH", 7) == 0 || memcmp(lpString, "       ", 7) == 0))
-//    return ORIG_ExtTextOutA(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
 
    LPWSTR lpszUnicode;
    int bufferLength;
@@ -548,16 +427,6 @@ BOOL WINAPI IMPL_ExtTextOutW(HDC hdc, int nXStart, int nYStart, UINT fuOptions, 
    if(!pTLInfo) {
       return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
    }
-
-   // サロゲートや合成を含む場合はオリジナルの関数にぶん投げる
-   // Uniscribe経由でETO_GLYPH_INDEXフラグ付きで戻ってくる
-   // ビットマップフォントやフォールバック時などETO_GLYPH_INDEXが付かないこともあるので再入をチェック
-#if 0
-   if (!(fuOptions & ETO_GLYPH_INDEX) && !pTLInfo->InUniscribe()
-       && ScriptIsComplex(lpString, cbString, SIC_COMPLEX) == S_OK) {
-      return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
-   }
-#endif
 
    if (pTLInfo->InExtTextOut()) {
       return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
@@ -698,8 +567,6 @@ ETO_TRY();
    if (lf.lfEscapement != 0) {
       ETO_THROW(ETOE_ROTATEFONT);// rotated font
    }
-   //trace(L"OrigTextSize=%d %d\n", textSize.cx, textSize.cy);
-   //trace(L"OrigCursor=%d %d\n", curPos.x, curPos.y);
 
    //rectangle
    {
@@ -747,11 +614,6 @@ ETO_TRY();
       drawSize.cy = rc.bottom - rc.top;
    }
 
-   //trace(L"MovedCursor=%d %d\n", curPos.x, curPos.y);
-   //trace(L"TargetRect=%d %d %d %d\n", rc.left, rc.top, rc.right, rc.bottom);
-   //trace(L"DestPos=%dx%d Size=%dx%d\n", destPos.x, destPos.y, destSize.cx, destSize.cy);
-   //trace(L"CanvasPos=%dx%d Size=%dx%d\n", canvasPos.x, canvasPos.y, canvasSize.cx, canvasSize.cy);
-
    if(drawSize.cx < 1 || drawSize.cy < 1) {
       ETO_THROW(ETOE_NOAREA); //throw no area
    }
@@ -796,8 +658,6 @@ ETO_TRY();
 
    //setup
    SetTextAlign(hCanvasDC, TA_LEFT | TA_TOP);
-   //debug
-   //Dbg_TraceExtTextOutW(nXStart, nYStart, fuOptions, lpString, cbString, lpDx);
 
    //textout
    SetTextColor(hCanvasDC, GetTextColor(hdc));
@@ -844,111 +704,3 @@ ETO_CATCH();
    }
    return ORIG_ExtTextOutW(hdc, nXStart, nYStart, fuOptions, lprc, lpString, cbString, lpDx);
 }
-
-#if 0
-
-HRESULT WINAPI IMPL_ScriptItemize(
-  const WCHAR* pwcInChars, 
-  int cInChars, 
-  int cMaxItems, 
-  const SCRIPT_CONTROL* psControl, 
-  const SCRIPT_STATE* psState, 
-  SCRIPT_ITEM* pItems, 
-  int* pcItems 
-) {
-   HRESULT hr = ORIG_ScriptItemize(pwcInChars, cInChars, cMaxItems, psControl, psState, pItems, pcItems);
-   if (FAILED(hr))
-      return hr;
-   //異体字セレクタで始まる実行単位(ラン)を探す
-   //最終実行単位の長さを示すための項目は*pcItemsの値に含まれないことに注意
-   for (int i = 1; i < *pcItems; ++i) {
-      //条件を満たさない実行単位はスキップ
-      const int iCharPos = pItems[i].iCharPos;
-      if (pItems[i + 1].iCharPos - iCharPos < 2)
-         continue; //異体字セレクタの表現には少なくともUnicodeコードポイント2つが必要
-      if (pwcInChars[iCharPos] != 0xDB40)
-         continue; //上位サロゲートの値が範囲外
-      if (pwcInChars[iCharPos + 1] - 0xDD00 >= 0xF0)
-         continue; //下位サロゲートの値が範囲外
-      //異体字セレクタを1つ前の実行単位に移動する
-      pItems[i].iCharPos += 2;
-      //長さが0になった場合は実行単位そのものを削除する
-      if (pItems[i + 1].iCharPos <= pItems[i].iCharPos) {
-         memmove(&pItems[i], &pItems[i + 1], (*pcItems - i) * sizeof SCRIPT_ITEM);
-         --*pcItems;
-         --i; //削除した分のつじつま合わせ
-      }
-   }
-   return hr;
-}
-
-HRESULT WINAPI IMPL_ScriptShape(
-  HDC hdc, 
-  SCRIPT_CACHE* psc, 
-  const WCHAR* pwcChars, 
-  int cChars, 
-  int cMaxGlyphs, 
-  SCRIPT_ANALYSIS* psa, 
-  WORD* pwOutGlyphs, 
-  WORD* pwLogClust, 
-  SCRIPT_VISATTR* psva, 
-  int* pcGlyphs 
-) {
-   //実行単位の末尾が異体字シーケンスでなければ何もしない
-   WORD vsindex;
-   if (cChars < 3 || cMaxGlyphs < 1 || pwcChars[cChars - 2] != 0xDB40 || (vsindex = pwcChars[cChars - 1] - 0xDD00) >= 0xF0)
-      return ORIG_ScriptShape(hdc, psc, pwcChars, cChars, cMaxGlyphs, psa, pwOutGlyphs, pwLogClust, psva, pcGlyphs);
-
-   if (!hdc)
-      return E_PENDING; //判定にはHDCが必要
-
-   //異体字セレクタを削ってシェーピングエンジンに渡す
-   HRESULT hr = ORIG_ScriptShape(hdc, psc, pwcChars, cChars - 2, cMaxGlyphs - 1, psa, pwOutGlyphs, pwLogClust, psva, pcGlyphs);
-   if (FAILED(hr) || psa->fNoGlyphIndex)
-      return hr;
-
-   //最終グリフを置き換える
-   WORD high;
-   WORD low = pwcChars[cChars - 3] - 0xDC00;
-   int baseChar;
-   if (cChars >= 4 && (high = pwcChars[cChars - 4] - 0xD800) < 0x400 && low < 0x400)
-      baseChar = ((high << 10) | low) + 0x10000;
-   else
-      baseChar = pwcChars[cChars - 3];
-   if (*pcGlyphs > 0) {
-      FreeTypeSubstGlyph(hdc, vsindex, baseChar, cChars, psa, pwOutGlyphs, pwLogClust, psva, pcGlyphs);
-   }
-   return hr;
-}
-
-HRESULT WINAPI IMPL_ScriptTextOut(
-  const HDC hdc, 
-  SCRIPT_CACHE* psc, 
-  int x, 
-  int y, 
-  UINT fuOptions, 
-  const RECT* lprc, 
-  const SCRIPT_ANALYSIS* psa, 
-  const WCHAR* pwcReserved, 
-  int iReserved, 
-  const WORD* pwGlyphs, 
-  int cGlyphs, 
-  const int* piAdvance, 
-  const int* piJustify, 
-  const GOFFSET* pGoffset 
-) {
-   CThreadLocalInfo* pTLInfo = g_TLInfo.GetPtr();
-   if (pTLInfo) {
-      pTLInfo->InUniscribe(true);
-      pTLInfo->InExtTextOut(false);
-    }
-   HRESULT hr = ORIG_ScriptTextOut(hdc, psc, x, y, fuOptions, lprc, psa, pwcReserved, iReserved,
-      pwGlyphs, cGlyphs, piAdvance, piJustify, pGoffset);
-
-   if (pTLInfo)
-      pTLInfo->InUniscribe(false);
-
-   return hr;
-}
-
-#endif
