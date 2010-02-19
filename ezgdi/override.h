@@ -13,12 +13,11 @@ class CThreadLocalInfo
 private:
    CBitmapCache   m_bmpCache;
    bool        m_bInExtTextOut;
-   bool        m_bInUniscribe;
-   bool        m_bPadding[2];
+   bool        m_bPadding[3];
 
 public:
    CThreadLocalInfo()
-      : m_bInExtTextOut(false), m_bInUniscribe(false)
+      : m_bInExtTextOut(false)
    {
    }
 
@@ -35,28 +34,11 @@ public:
    {
       return m_bInExtTextOut;
    }
-
-#if 0
-   void InUniscribe(bool b)
-   {
-      m_bInUniscribe = b;
-   }
-   bool InUniscribe() const
-   {
-      return m_bInUniscribe;
-   }
-#endif
 };
 
 extern CTlsData<CThreadLocalInfo>   g_TLInfo;
 
 BOOL IsProcessExcluded();
-FORCEINLINE BOOL IsOSXPorLater()
-{
-   const CGdippSettings* pSettings = CGdippSettings::GetInstance();
-   return pSettings->IsWinXPorLater();
-}
-
 HFONT GetCurrentFont(HDC hdc);
 void AddFontToFT(HFONT hf, LPCTSTR lpszFace, int weight, bool italic);
 void AddFontToFT(LPCTSTR lpszFace, int weight, bool italic);
