@@ -1021,7 +1021,7 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    FTInfo.face_id_list_num = 1;
 
    if(FTC_Manager_LookupFace(cache_man, face_id, &freetype_face)) {
-      Assert(false);
+      //Assert(false);
       return FALSE;
    }
 
@@ -1387,7 +1387,7 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
             if (bSizeOnly) {
                FTInfo.x += cx;
             } else {
-               if (wch) {
+               if (wch && FTInfo.params.alpha == 1) {
                   ORIG_ExtTextOutW(FTInfo.hdc, FTInfo.x, FTInfo.yTop, FTInfo.GetETO(), NULL, &wch, 1, NULL);
                }
                if (lpString < lpEnd - 1) {
@@ -1766,9 +1766,17 @@ BOOL FreeTypeGetTextExtentPoint(
    const FREETYPE_PARAMS* params
    )
 {
+   /*
+    *  FIXME: there should be a replaced version of GetTextExtentPointI for WidthMode=1
+    *         but there isn't now, so we call the original one when GLYPH_INDEX is specified
+    *         and obviously calling GetTextExtentPoint32W in this circumstance is wrong
+    */
+   if (params->etoOptions && ETO_GLYPH_INDEX)
+      return GetTextExtentPointI(hdc, (LPWORD)lpString, cbString, lpSize);
+
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();
    if (pSettings->WidthMode() == SETTING_WIDTHMODE_GDI32) {
-      return ORIG_GetTextExtentPoint32W(hdc, lpString, cbString, lpSize);
+         return ORIG_GetTextExtentPoint32W(hdc, lpString, cbString, lpSize);
    }
 
    CCriticalSectionLock __lock;
