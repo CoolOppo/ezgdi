@@ -696,9 +696,21 @@ CFontLinkInfo::~CFontLinkInfo()
 
 void CFontLinkInfo::init()
 {
-   /* get default gui font: MS Gui Dlg*/
+   /* get default gui font: MS Shell Dlg */
+
+   /*
+      FIXME: Default FontLink stored in MS Shell Dlg registry key (maybe it's Microsoft Sans 
+             Serif as I know) is only available under English and Japanese locales. It should
+             not be introduced in Chinese/PRC and other locales, as it cause more problem than
+             it's benefit.
+             
+             I should determine locale here. But let's silently discard DEFAULT_GUI_FONT for now.
+    */
+#if 0
    HGDIOBJ h = GetStockObject(DEFAULT_GUI_FONT);
    GetObject(h, sizeof syslf, &syslf);
+#endif
+   default_font = NULL;
 
    /* open registry keys */
    const WCHAR rkFontLink[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\FontLink\\SystemLink";
@@ -741,6 +753,7 @@ void CFontLinkInfo::init()
             StringCchCopyW(linkfont, STRMAX, p + 1);
          
          if (!p) { /* no ',' in fontlink, check fontname in hkFontName */
+            linkfont[0] = L'\0';
             for(int j = 0; ; ++j) {
                WCHAR name[STRMAX], file[STRMAX];
                DWORD name_len = STRMAX, file_len = STRMAX * sizeof(WCHAR);
@@ -751,11 +764,14 @@ void CFontLinkInfo::init()
                   break;
                if (regtype != REG_SZ)
                   continue;
-               if (StrCmpIW(file, linkfile) == 0) 
+               if (StrCmpIW(file, linkfile) != 0) 
                   continue;
                StringCchCopyW(linkfont, STRMAX, name);
                break;
             }
+
+            if (linkfont[0] == L'\0') /* font not registered, ignore */
+               continue;
             
             if (p = StrStrIW(linkfont, L" (")) /* remove (Truetype) */
                *p = L'\0';
@@ -771,14 +787,22 @@ void CFontLinkInfo::init()
       }
       else {
          CString key = info[row][0];
-         key.MakeLower();
+         key.MakeLower();         
          index[key] = row;
+
+         /* If FontLink is Tahoma, then save the first item as default font that all font links
+            to. This is the default behavior under CJK locale (I assume), although gdi32.dll
+            hardcoded this font. But I use this trick to get default font in CJK locale */
+         if (key.CompareNoCase(L"Tahoma") == 0) {
+            Assert(info[row][1]);
+            default_font = info[row][1];
+         }
          ++row;
       }
    }
 
 #undef STRMAX
-
+   
    /* copy default font link */
    const LPCWSTR *p_default = this->lookup(sysfn());
    if (p_default) {
@@ -970,10 +994,14 @@ CFontFaceNamesEnumerator::CFontFaceNamesEnumerator(LPCWSTR facename)
    if (p_facename)
       return;
 
+#if 0 /* discard MS Shell Dlg for now */
    p_facename = info.lookup(info.sysfn());
    if (p_facename)
       return;
+#endif
 
-   m_facenames[0] = NULL;
+   m_facenames[0] = info.sysfn();
+   m_facenames[1] = NULL;
    p_facename = m_facenames;
+   return;
 }

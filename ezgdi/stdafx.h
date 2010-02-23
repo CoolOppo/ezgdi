@@ -47,6 +47,7 @@
 #include <freetype/ftoutln.h>
 #include <freetype/fttrigon.h>
 #include <freetype/ftlcdfil.h>
+#include <freetype/tttables.h>
 
 /* hook api headers */
 #ifdef USE_DETOURS
