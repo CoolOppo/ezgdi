@@ -993,6 +993,8 @@ public:
    DWORD getsize() { return m_size; }
 };
 
+BOOL FreeTypeSetDrawSettings(FreeTypeDrawInfo& FTInfo, FTC_FaceID face_id);
+
 BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
 {
    FT_Face& freetype_face        = FTInfo.freetype_face;
@@ -1049,7 +1051,10 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
 		{
          FTC_ScalerRec scaler = { 0 };
          scaler.face_id = face_id;
-         scaler.width   = lf.lfWidth;
+         // scaler.width   = lf.lfWidth;
+         TT_OS2 *os2_table = (TT_OS2 *)FT_Get_Sfnt_Table(freetype_face, ft_sfnt_os2);
+         scaler.width   = FT_MulDiv(lf.lfWidth, freetype_face->units_per_EM, os2_table->xAvgCharWidth);
+
          if(lf.lfHeight > 0){
             // ƒZƒ‹‚‚³
             scaler.height = FT_MulDiv(lf.lfHeight, freetype_face->units_per_EM, freetype_face->height);
@@ -1084,6 +1089,25 @@ BOOL FreeTypePrepare(FreeTypeDrawInfo& FTInfo)
    pftCache = pfi->GetCache(height, lf);
    if(!pftCache)
       return FALSE;
+
+   return FreeTypeSetDrawSettings(FTInfo, face_id);
+}
+
+BOOL FreeTypeSetDrawSettings(FreeTypeDrawInfo& FTInfo, FTC_FaceID face_id)
+{
+   FT_Face& freetype_face        = FTInfo.freetype_face;
+   FT_Render_Mode& render_mode      = FTInfo.render_mode;
+   FTC_ImageTypeRec& font_type      = FTInfo.font_type;
+   
+   FreeTypeFontInfo* pfi        = g_pFTEngine->FindFont((int)face_id);
+   if (!pfi)
+      return FALSE;
+
+   const CFontSettings* pfs     = &pfi->GetFontSettings();
+   if (!pfs)
+      return FALSE;
+   
+   const CGdippSettings* pSettings = CGdippSettings::GetInstance();
 
    /*FT_Size_RequestRec size_request;
    size_request.width = lf.lfWidth;
@@ -1347,6 +1371,7 @@ BOOL ForEachGetGlyph(FreeTypeDrawInfo& FTInfo, LPCTSTR lpString, int cbString, B
                   if (glyph_index != 0) {
                      f_glyph = true;
                      FTInfo.font_type.face_id = FTInfo.face_id_list[i];
+                     FreeTypeSetDrawSettings(FTInfo, FTInfo.font_type.face_id);
                      break;
                   }
                }
@@ -1771,7 +1796,7 @@ BOOL FreeTypeGetTextExtentPoint(
     *         but there isn't now, so we call the original one when GLYPH_INDEX is specified
     *         and obviously calling GetTextExtentPoint32W in this circumstance is wrong
     */
-   if (params->etoOptions && ETO_GLYPH_INDEX)
+   if (params->etoOptions & ETO_GLYPH_INDEX)
       return GetTextExtentPointI(hdc, (LPWORD)lpString, cbString, lpSize);
 
    const CGdippSettings* pSettings = CGdippSettings::GetInstance();

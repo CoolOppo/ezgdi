@@ -87,7 +87,7 @@ public:
    };
 private:
    LPWSTR info[INFOMAX + 1][2 * FONTMAX + 1];
-   LOGFONT syslf;
+   LPCWSTR default_font;
    CAtlMap<CString, int> index;
 
 public:
@@ -95,8 +95,13 @@ public:
    ~CFontLinkInfo();
    void init();
    void clear();
-   const LPCWSTR sysfn() const { return syslf.lfFaceName; }
    const LPCWSTR * lookup(LPCWSTR fontname) const;
+   const LPCWSTR sysfn() const { return default_font; }
+
+#if 0 /* disable sysfn for now*/
+   LOGFONT syslf;
+   const LPCWSTR sysfn() const { return syslf.lfFaceName; }
+#endif
 };
 
 class CFontSubstitutesInfo;
@@ -331,7 +336,7 @@ public:
 class CFontFaceNamesEnumerator
 {
 private:
-   LPCWSTR m_facenames[1];
+   LPCWSTR m_facenames[2];
    const LPCWSTR *p_facename;
    int m_pos;
    CFontFaceNamesEnumerator();
