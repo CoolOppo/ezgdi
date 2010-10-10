@@ -181,3 +181,19 @@ HOOK_DEFINE(
    "hdc(%p), psc(%p), x(%d), y(%d), fuOptions(%u), lprc(%p), psa(%p), pwcReserved(%pLS), iReserved(%p), pwGlyphs(%p), cGlyphs(%d), piAdvance(%p), piJustify(%p), pGoffset(%p)",
    "usp10.dll"
 )
+
+HOOK_DEFINE(
+   BOOL, GetTextExtentExPointW,
+   (HDC hdc, LPCTSTR lpszStr, int cchString, int nMaxExtent, LPINT lpnFit, LPINT alpDx, LPSIZE lpSize),
+   (hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize),
+   "hdc(%p), lpszStr(%p), cchString(%d), nMaxExtent(%d), lpnFit(%p), alpDx(%p), lpSize(%p)",
+   "gdi32.dll"
+)
+
+HOOK_DEFINE(
+   DWORD, GetCharacterPlacementW,
+   (HDC hdc, LPCTSTR lpString, int nCount, int nMaxExtent, LPGCP_RESULTS lpResults, DWORD dwFlags),
+   (hdc, lpString, nCount, nMaxExtent, lpResults, dwFlags),
+   "hdc(%p), lpString(%p), nCount(%d), nMaxExtent(%d), lpResults(%p), dwFlags(%x)",
+   "gdi32.dll"
+)

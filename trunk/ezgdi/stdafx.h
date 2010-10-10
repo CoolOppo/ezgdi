@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef UNICODE
+#error Must be compiled in UNICODE mode
+#endif
+
 /* windows version defines */
 #include "targetver.h"
 
@@ -58,7 +62,7 @@
 
 /* useful defines */
 #define Assert _ASSERTE
-#define TRACE  NOP_FUNCTION
+#define TRACE  ATLTRACE2
 
 /* project headers */
 #include "optimize/optimize.h"
