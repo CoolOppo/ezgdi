@@ -1,0 +1,119 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Source Files\LocalHook">
+      <UniqueIdentifier>{62bb7974-27dd-44f6-88e8-0b74f154f6e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\RemoteHook">
+      <UniqueIdentifier>{f098c000-4a43-422f-b4ce-bb25e92fa78a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Rtl">
+      <UniqueIdentifier>{c6d4b9a1-16f8-4e8d-b14a-7a58aa7b6c81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ASM">
+      <UniqueIdentifier>{c42190dd-205d-47e2-8086-ad8c2a3575ae}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\dllmain.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\LocalHook\acl.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\alloc.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\barrier.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\caller.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\LocalHook\debug.cpp">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\install.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\reloc.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\LocalHook\uninstall.c">
+      <Filter>Source Files\LocalHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\RemoteHook\driver.cpp">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\RemoteHook\entry.cpp">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\gacutil.cpp">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\RemoteHook\service.c">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\RemoteHook\stealth.c">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\RemoteHook\thread.c">
+      <Filter>Source Files\RemoteHook</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\Rtl\error.c">
+      <Filter>Source Files\Rtl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\Rtl\file.c">
+      <Filter>Source Files\Rtl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\EasyHookDll\Rtl\memory.c">
+      <Filter>Source Files\Rtl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\easyhook-2.6\DriverShared\Rtl\string.c">
+      <Filter>Source Files\Rtl</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\easyhook-2.6\DriverShared\DriverShared.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\easyhook-2.6\easyhook.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\easyhook-2.6\EasyHookDll\ntstatus.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\easyhook-2.6\DriverShared\rtl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\easyhook-2.6\EasyHookDll\stdafx.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\easyhook-2.6\DriverShared\ASM\HookSpecific_x64.asm">
+      <Filter>Source Files\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\easyhook-2.6\DriverShared\ASM\HookSpecific_x86.asm">
+      <Filter>Source Files\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\easyhook-2.6\DriverShared\ASM\ILD_x64.asm">
+      <Filter>Source Files\ASM</Filter>
+    </CustomBuild>
+    <CustomBuild Include="..\..\easyhook-2.6\DriverShared\ASM\ILD_x86.asm">
+      <Filter>Source Files\ASM</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
